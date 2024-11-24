@@ -1,5 +1,3 @@
-// 加上它之后,才能通过PanicInfo::message获取报错信息
-#![feature(panic_info_message)]
 #![no_std]
 #![no_main]
 
@@ -20,7 +18,10 @@ global_asm!(include_str!("entry.asm"));
 pub fn rust_main() -> ! {
     clear_bss();
     println!("hello rust rcore!");
+    // 如果以panic等非正常途径的方式进入发散
+    // make 检查返回值会报错, 属于正常现象
     panic!("Manually Shutdown the Machine!");
+    //loop {}
 }
 
 fn clear_bss() {
