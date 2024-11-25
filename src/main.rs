@@ -5,32 +5,11 @@
 mod console;
 
 mod lang_items;
+mod logging;
 mod sbi;
 
-use core::{arch::global_asm, panic};
-use log::{debug, error, info, trace, warn, Level, LevelFilter, Metadata, Record, SetLoggerError};
-
-struct SimpleLogger;
-
-impl log::Log for SimpleLogger {
-    fn enabled(&self, metadata: &Metadata) -> bool {
-        metadata.level() <= Level::Info
-    }
-
-    fn log(&self, record: &Record) {
-        if self.enabled(record.metadata()) {
-            println!("{} - {}", record.level(), record.args());
-        }
-    }
-
-    fn flush(&self) {}
-}
-
-static LOGGER: SimpleLogger = SimpleLogger;
-
-fn log_init() -> Result<(), SetLoggerError> {
-    log::set_logger(&LOGGER).map(|()| log::set_max_level(LevelFilter::Trace))
-}
+use core::arch::global_asm;
+use log::*;
 
 // include_str! 宏, 可以将指令路径下的文件转化为字符串
 // 再通过global_asm!宏嵌入到代码中
@@ -54,7 +33,7 @@ pub fn rust_main() -> ! {
     clear_bss();
     println!("[kernel] hello rCore!");
 
-    log_init().unwrap();
+    logging::init().unwrap();
 
     trace!(
         "[kernel] .text [{:#x}, {:#x})",
