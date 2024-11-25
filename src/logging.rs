@@ -1,9 +1,9 @@
-use log::{Level, LevelFilter, Log, Metadata, Record, SetLoggerError};
+use log::{Level, LevelFilter, Log, Metadata, Record};
 
 struct SimpleLogger;
 
 impl Log for SimpleLogger {
-    fn enabled(&self, metadata: &Metadata) -> bool {
+    fn enabled(&self, _metadata: &Metadata) -> bool {
         //metadata.level() <= Level::Info
         true
     }
@@ -33,6 +33,31 @@ impl Log for SimpleLogger {
 
 static LOGGER: SimpleLogger = SimpleLogger;
 
-pub fn init() -> Result<(), SetLoggerError> {
-    log::set_logger(&LOGGER).map(|()| log::set_max_level(LevelFilter::Trace))
+pub fn init() {
+    if let Err(e) = log::set_logger(&LOGGER) {
+        println!("set logger failed: {} ?", e);
+        return;
+    }
+
+    let level = option_env!("LOG").unwrap_or("trace");
+    // let level = option_env!("LOG").map(|inner| {
+    //     inner.chars().map(|c| {
+    //         if c >= 'A' && c <= 'Z' {
+    //             (c as u8 + 32) as char
+    //         } else {
+    //             c
+    //         }
+    //     }).collect::<Vec<char>>()
+    // }).unwrap_or("trace");
+
+    let max_level = match level {
+        "trace" => LevelFilter::Trace,
+        "debug" => LevelFilter::Debug,
+        "info" => LevelFilter::Info,
+        "warn" => LevelFilter::Warn,
+        "error" => LevelFilter::Error,
+        _ => LevelFilter::Off,
+    };
+
+    log::set_max_level(max_level);
 }

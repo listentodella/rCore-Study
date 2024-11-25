@@ -33,7 +33,7 @@ pub fn rust_main() -> ! {
     clear_bss();
     println!("[kernel] hello rCore!");
 
-    logging::init().unwrap();
+    logging::init();
 
     trace!(
         "[kernel] .text [{:#x}, {:#x})",
