@@ -9,9 +9,23 @@ impl Log for SimpleLogger {
     }
 
     fn log(&self, record: &Record) {
-        if self.enabled(record.metadata()) {
-            println!("{} - {}", record.level(), record.args());
-        }
+        // if self.enabled(record.metadata()) {
+        //     println!("{} - {}", record.level(), record.args());
+        // }
+        let color = match record.level() {
+            Level::Trace => 90, // BrightBlack
+            Level::Debug => 32, // Green
+            Level::Info => 34,  //Blue
+            Level::Warn => 93,  //Bright Yello
+            Level::Error => 31, //Red
+        };
+
+        println!(
+            "\u{1B}[{}m[{:>5}] {}\u{1B}[0m",
+            color,
+            record.level(),
+            record.args()
+        );
     }
 
     fn flush(&self) {}
