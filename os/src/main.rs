@@ -41,10 +41,6 @@ pub fn rust_main() -> ! {
 
     logging::init();
 
-    let num_app_ptr = _num_app as *mut usize;
-    let num_app = unsafe { num_app_ptr.read_volatile() };
-    info!("there {} apps found~", num_app);
-
     trace!(
         "[kernel] .text [{:#x}, {:#x})",
         stext as usize,
@@ -63,6 +59,8 @@ pub fn rust_main() -> ! {
         boot_stack_top as usize, boot_stack_lower_bound as usize
     );
     error!("[kernel] .bss [{:#x}, {:#x})", sbss as usize, ebss as usize);
+
+    batch::init();
 
     // 如果以panic等非正常途径的方式进入发散
     // make 检查返回值会报错, 属于正常现象
