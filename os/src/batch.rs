@@ -35,3 +35,32 @@ lazy_static! {
         })
     };
 }
+
+impl AppManager {
+    pub fn print_app_info(&self) {
+        info!("[kernel] there are {} apps found", self.num_app);
+        for i in 0..self.num_app {
+            debug!(
+                "[kernel] app[{i}] start_addr[{:#x}, {:#x})",
+                self.app_start[i],
+                self.app_start[i + 1]
+            );
+        }
+    }
+
+    pub fn get_current_app(&self) -> usize {
+        self.curr_app
+    }
+
+    pub fn move_to_next_app(&mut self) {
+        self.curr_app += 1;
+    }
+}
+
+pub fn print_app_info() {
+    APP_MANAGER.exclusive_access().print_app_info();
+}
+
+pub fn init() {
+    print_app_info();
+}
