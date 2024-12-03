@@ -4,9 +4,11 @@
 #[macro_use]
 mod console;
 
+pub mod batch;
 mod lang_items;
 mod logging;
 mod sbi;
+mod sync;
 
 use core::arch::global_asm;
 use log::*;
@@ -31,11 +33,17 @@ pub fn rust_main() -> ! {
         fn ebss(); // end addr of BSS segment
         fn boot_stack_lower_bound(); // stack lower bound
         fn boot_stack_top(); // stack top
+        fn _num_app();
     }
+
     clear_bss();
     println!("[kernel] hello rCore!");
 
     logging::init();
+
+    let num_app_ptr = _num_app as *mut usize;
+    let num_app = unsafe { num_app_ptr.read_volatile() };
+    info!("there {} apps found~", num_app);
 
     trace!(
         "[kernel] .text [{:#x}, {:#x})",
