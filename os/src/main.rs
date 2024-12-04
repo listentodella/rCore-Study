@@ -61,6 +61,7 @@ pub fn rust_main() -> ! {
     error!("[kernel] .bss [{:#x}, {:#x})", sbss as usize, ebss as usize);
 
     batch::init();
+    batch::run_next_app();
 
     // 如果以panic等非正常途径的方式进入发散
     // make 检查返回值会报错, 属于正常现象
