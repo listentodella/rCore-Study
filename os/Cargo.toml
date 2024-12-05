@@ -7,3 +7,4 @@ edition = "2021"
 lazy_static = { version = "1.5.0", features = ["spin_no_std"] }
 log = "0.4.22"
 sbi-rt = { version = "0.0.2", features = ["legacy"] }
+riscv = { git = "https://github.com/rcore-os/riscv", features = ["inline-asm"] }
