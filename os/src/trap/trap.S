@@ -11,7 +11,9 @@
 .macro LOAD_GP n
     ld x\n, \n*8(sp)
 .endm
-
+    .section .text
+    .globl __alltraps
+    .globl __restore
 // riscv 特权级规范, 4字节对齐
 .align 2
 __alltraps:

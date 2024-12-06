@@ -4,8 +4,7 @@ use log::*;
 use crate::batch::run_next_app;
 
 /// task exits and submit an exit code
-pub fn sys_exit(exit_code: i32) -> isize {
+pub fn sys_exit(exit_code: i32) -> ! {
     info!("[kernel] Application exited with code {}", exit_code);
-    run_next_app();
-    0
+    run_next_app()
 }

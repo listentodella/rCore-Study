@@ -8,7 +8,9 @@ pub fn sys_write(fd: usize, buffer: *const u8, len: usize) -> isize {
             //let str = unsafe { core::str::from_raw_parts(buffer, len) };
             let slice = unsafe { core::slice::from_raw_parts(buffer, len) };
             let str = core::str::from_utf8(slice).unwrap();
-            println!("{}", str);
+            // DO NOT append '\n' or use println
+            // JUST print raw would be better
+            print!("{}", str);
             len as isize
         }
         _ => {

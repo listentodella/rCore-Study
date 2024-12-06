@@ -1,4 +1,6 @@
+use crate::sbi::shutdown;
 use crate::sync::UPSafeCell;
+use crate::trap::TrapContext;
 use core::arch::asm;
 use lazy_static::*;
 use log::*;
@@ -35,6 +37,14 @@ impl KernelStack {
     // 于是换栈, 只需将 sp 寄存器的值修改为 get_sp 的返回值即可
     fn get_sp(&self) -> usize {
         self.data.as_ptr() as usize + KERNEL_STACK_SIZE
+    }
+
+    pub fn push_context(&self, cx: TrapContext) -> &'static mut TrapContext {
+        let cx_ptr = (self.get_sp() - core::mem::size_of::<TrapContext>()) as *mut TrapContext;
+        unsafe {
+            *cx_ptr = cx;
+        }
+        unsafe { cx_ptr.as_mut().unwrap() }
     }
 }
 
@@ -101,7 +111,8 @@ impl AppManager {
 
     unsafe fn load_app(&self, app_id: usize) {
         if app_id >= self.num_app {
-            error!("All apps completed!");
+            info!("All apps completed!");
+            shutdown(false);
         }
         info!("[kernel] Loading app_{}", app_id);
 
@@ -138,11 +149,27 @@ pub fn init() {
     print_app_info();
 }
 
-pub fn run_next_app() {
+pub fn run_next_app() -> ! {
     let mut app_manager = APP_MANAGER.exclusive_access();
     let curr_app_id = app_manager.get_current_app();
     unsafe {
         app_manager.load_app(curr_app_id);
     }
     app_manager.move_to_next_app();
+    // we need manually drop to release, or use {...} to release
+    drop(app_manager);
+
+    // before this we have to drop local variables related to resources manually
+    // and release the resources
+    extern "C" {
+        fn __restore(cx_addr: usize);
+    }
+    unsafe {
+        __restore(KERNEL_STACK.push_context(TrapContext::app_init_context(
+            APP_BASE_ADDRESS,
+            USER_STACK.get_sp(),
+        )) as *const _ as usize);
+    }
+
+    panic!("Unreachable in batch::run_current_app!");
 }

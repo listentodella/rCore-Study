@@ -10,7 +10,7 @@ use riscv::register::{
 use log::*;
 
 mod context;
-use context::TrapContext;
+pub use context::TrapContext;
 
 global_asm!(include_str!("trap.S"));
 
