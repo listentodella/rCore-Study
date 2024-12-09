@@ -17,6 +17,7 @@ fn sbi_main() {
     let mut val = mstatus::read();
     val.set_mpp(mstatus::MPP::Supervisor);
     val.set_mpie(false);
+    mstatus::write(val);
 
     // 设置M模式的异常程序计数器, 用于 mret 跳转
     mepc::write(FW_JUMP_ADDR);
@@ -24,6 +25,7 @@ fn sbi_main() {
     unsafe {
         // 设置S模式的异常向量表入口地址
         stvec::write(FW_JUMP_ADDR, stvec::TrapMode::Vectored);
+        //stvec::write(FW_JUMP_ADDR, stvec::TrapMode::Direct);
 
         // 关闭S模式的中断
         sie::clear_ssoft();
