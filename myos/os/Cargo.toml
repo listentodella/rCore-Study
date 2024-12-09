@@ -1,0 +1,11 @@
+[package]
+name = "mysbi"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+riscv = "0.12.1"
+
+
+[profile.release]
+debug = true

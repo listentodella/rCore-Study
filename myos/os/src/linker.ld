@@ -1,0 +1,15 @@
+BASE_ADDRESS = 0x80200000;
+
+SECTIONS
+{
+	. = BASE_ADDRESS;
+	
+	.text.boot : { *(.text.boot) }
+	.text : { *(.text) }
+	.rodata : { *(.rodata) }
+	.data : { *(.data) }
+	. = ALIGN(0x08);
+	bss_start = .;
+	.bss : { *(.bss*) }
+	bss_end = .;
+}
