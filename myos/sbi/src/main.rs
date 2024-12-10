@@ -24,8 +24,8 @@ fn sbi_main() {
 
     unsafe {
         // 设置S模式的异常向量表入口地址
-        stvec::write(FW_JUMP_ADDR, stvec::TrapMode::Vectored);
-        //stvec::write(FW_JUMP_ADDR, stvec::TrapMode::Direct);
+        //stvec::write(FW_JUMP_ADDR, stvec::TrapMode::Vectored);
+        stvec::write(FW_JUMP_ADDR, stvec::TrapMode::Direct);
 
         // 关闭S模式的中断
         sie::clear_ssoft();

@@ -13,7 +13,7 @@ _start:
 	add sp, sp, t0
 
 	// 执行 kernel_main 函数
-	call kernel_main
+	tail kernel_main
 
 hang:
 	wfi
