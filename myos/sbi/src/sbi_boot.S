@@ -1,5 +1,5 @@
-/* 把该文件编译,链接到.text.boot段 */
-.section ".text.boot"
+/* 把该文件编译,链接到.text.entry段 */
+.section .text.entry
 
 .globl _start
 _start:
