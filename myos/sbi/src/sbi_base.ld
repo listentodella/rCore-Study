@@ -1,13 +1,44 @@
 BASE_ADDRESS = 0x80000000;
 
 . = BASE_ADDRESS;
+skernel = .;
 
-.text.boot : { *(.text.boot) }
-.text : { *(.text) }
-.rodata : { *(.rodata) }
-.data : { *(.data) }
-. = ALIGN(0x08);
-bss_start = .;
-.bss : { *(.bss*) }
-bss_end = .;
+stext = .;
+.text : {
+	*(.text.entry)
+	*(.text.entry.*)
+}
+
+. = ALIGN(4K);
+etext = .;
+srodata = .;
+.rodata : {
+	*(.rodata .rodata.*)
+	*(.srodata .srodata.*)
+}
+
+. = ALIGN(4K);
+erodata = .;
+sdata = .;
+.data : {
+	*(.data .data.*)
+	*(.sdata .sdata.*)
+}
+
+. = ALIGN(4K);
+edata = .;
+.bss : {
+	*(.bss.stack)
+	sbss = .;
+	*(.bss .bss.*)
+	*(.sbss .sbss.*)
+}
+
+. = ALIGN(4K);
+ebss = .;
+ekernel = .;
+
+/DISCARD/ : {
+	*(.eh_frame)
+}
 

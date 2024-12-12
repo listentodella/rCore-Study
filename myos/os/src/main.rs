@@ -21,6 +21,6 @@ fn kernel_main() -> ! {
     uart::putchar('l' as usize);
     uart::putchar('o' as usize);
 
-    //println!("hello myOS, {}", c);
+    println!("hello myOS, {}", c);
     loop {}
 }
