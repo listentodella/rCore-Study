@@ -16,10 +16,20 @@ struct Opts {
 #[derive(Debug, Parser)]
 enum SubCommand {
     //对子命令成员解释,如果不显式起名,则默认为该成员名的小写
+    #[command(name = "asm", about = "asm args about")]
+    Asm(AsmOpts),
     #[command(name = "qemu", about = "qemu args about")]
     Qemu(QemuOpts),
     #[command(name = "make", about = "build args about")]
     Make(BuildOpts),
+}
+
+#[derive(Debug, Parser)]
+struct AsmOpts {
+    #[clap(flatten)]
+    make: BuildOpts,
+    #[arg(short, long, default_value_t = false)]
+    verbose: bool,
 }
 
 #[derive(Debug, Parser)]
@@ -53,6 +63,7 @@ fn main() {
         Make(build_opts) => {
             let _ = build_opts.run();
         }
+        Asm(asm_opts) => asm_opts.run(),
     }
 }
 
@@ -70,6 +81,20 @@ impl QemuOpts {
             .args(["-device", "loader,file=os.bin,addr=0x80200000"]);
         info!("QEMU CMD: {:?}", qemu.info());
         qemu.invoke();
+    }
+}
+
+impl AsmOpts {
+    fn run(&self) {
+        let elf = self.make.run();
+        let mut binding = BinUtil::objdump();
+        let bin_cmd = binding
+            .arg(elf)
+            .arg(if self.verbose { "-d" } else { "-h" })
+            .output()
+            .stdout;
+        let output = String::from_utf8(bin_cmd).unwrap();
+        println!("{}", output);
     }
 }
 
