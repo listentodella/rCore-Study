@@ -1,4 +1,6 @@
 use clap::Parser;
+use log::{debug, error, info, warn};
+use os_xtask_utils::{CommandExt, Qemu};
 
 //对该复合类型使用clap::Parser派生宏
 #[derive(Debug, Parser)]
@@ -17,22 +19,35 @@ enum SubCommand {
     Qemu(QemuOpts),
 }
 
-// 对于结构体,必须将每一个想要对外暴露的成员使用pub修饰
 #[derive(Debug, Parser)]
 struct QemuOpts {
-    #[arg(long)]
+    #[arg(long, default_value = "riscv64")]
+    arch: String,
+    #[arg(long, default_value = "1234")]
     gdb: Option<u16>,
 }
 
 fn main() {
     use SubCommand::*;
+    pretty_env_logger::init();
     match Opts::parse().cmd {
         Qemu(qemu_opts) => qemu_opts.run(),
     }
 }
 
 impl QemuOpts {
+    //qemu-system-riscv64 -nographic -machine virt -bios mysbi.bin
+    //-device loader,file=os.bin,addr=0x80200000
     fn run(&self) {
-        println!("qemu gdb port {:?}", self.gdb);
+        info!("qemu opt args {:?}", self);
+        let mut binding = Qemu::system("riscv64");
+        let qemu = binding
+            .args(["-machine", "virt"])
+            .arg("-nographic")
+            .arg("-bios")
+            .arg("mysbi.bin")
+            .args(["-device", "loader,file=os.bin,addr=0x80200000"]);
+        info!("QEMU CMD: {:?}", qemu.info());
+        qemu.invoke();
     }
 }
