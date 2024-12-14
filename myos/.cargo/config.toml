@@ -1,3 +1,4 @@
 [alias]
 xtask = "run --package xtask --release --"
 qemu = "xtask qemu"
+make = "xtask make"
