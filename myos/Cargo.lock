@@ -207,8 +207,7 @@ dependencies = [
 [[package]]
 name = "os-xtask-utils"
 version = "0.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f5e9cccd7bf690840399e09e283b7f5aa219886dc5770c083beee2adca0ffabe"
+source = "git+https://github.com/listentodella/os-xtask-utils.git#b829534e455e2ca16637532fabcd0bc7594442db"
 dependencies = [
  "once_cell",
 ]
