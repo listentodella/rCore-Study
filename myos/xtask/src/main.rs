@@ -1,7 +1,7 @@
 use clap::Parser;
 use log::{debug, error, info, warn};
-use os_xtask_utils::{Cargo, CommandExt, Qemu};
-use std::path::PathBuf;
+use os_xtask_utils::{BinUtil, Cargo, CommandExt, Qemu};
+use std::path::{Path, PathBuf};
 
 //对该复合类型使用clap::Parser派生宏
 #[derive(Debug, Parser)]
@@ -86,6 +86,24 @@ impl BuildOpts {
         path.push(if self.release { "release" } else { "debug" });
         path.push(self.bin.as_str());
         info!("build success for {:?}", path);
+        objcopy(&path, true);
         path
     }
+}
+
+fn objcopy(elf: impl AsRef<Path>, is_binary: bool) -> PathBuf {
+    let elf = elf.as_ref();
+    let bin = elf.with_extension("bin");
+    let mut binding = BinUtil::objcopy();
+    let bin_cmd = binding
+        .arg(elf)
+        .arg("--strip-all")
+        .conditional(is_binary, |binutil| {
+            binutil.args(["-O", "binary"]);
+        })
+        .arg(&bin);
+    info!("objcopy CMD: {:?}", bin_cmd.info());
+    bin_cmd.invoke();
+
+    bin
 }
