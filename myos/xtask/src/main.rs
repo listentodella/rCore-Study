@@ -34,6 +34,8 @@ struct AsmOpts {
 
 #[derive(Debug, Parser)]
 struct QemuOpts {
+    #[clap(flatten)]
+    make: BuildOpts,
     #[arg(long, default_value = "riscv64")]
     arch: String,
     #[arg(long, default_value = "1234")]
@@ -72,14 +74,44 @@ impl QemuOpts {
     //-device loader,file=os.bin,addr=0x80200000
     fn run(&self) {
         info!("qemu opt args {:?}", self);
+        // let mysbi = BuildOpts {
+        //     bin: "mysbi".to_string(),
+        //     log: None,
+        //     release: false,
+        //     target: "riscv64gc-unknown-none-elf".to_string(),
+        // };
+        // mysbi.run();
+
+        // let os = BuildOpts {
+        //     bin: "os".to_string(),
+        //     log: None,
+        //     release: false,
+        //     target: "riscv64gc-unknown-none-elf".to_string(),
+        // };
+        // os.run();
+
+        let mut path = PathBuf::new();
+        path.push("target");
+        path.push(self.make.target.as_str());
+        path.push(if self.make.release {
+            "release"
+        } else {
+            "debug"
+        });
+        let mut sbi = path.clone();
+        sbi.push("mysbi.bin");
+        let mut os = path.clone();
+        os.push("os.bin");
+
         let mut binding = Qemu::system("riscv64");
         let qemu = binding
             .args(["-machine", "virt"])
             .arg("-nographic")
             .arg("-bios")
-            .arg("mysbi.bin")
-            .args(["-device", "loader,file=os.bin,addr=0x80200000"]);
-        info!("QEMU CMD: {:?}", qemu.info());
+            .arg(format!("{}", sbi.display()).as_str())
+            .arg("-device")
+            .arg(format!("loader,file={},addr=0x80200000", os.display()).as_str());
+        debug!("QEMU CMD: {:?}", qemu.info());
         qemu.invoke();
     }
 }
