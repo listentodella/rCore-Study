@@ -2,3 +2,4 @@
 xtask = "run --package xtask --release --"
 qemu = "xtask qemu"
 make = "xtask make"
+asm = "xtask asm"
