@@ -1,6 +1,7 @@
 use clap::Parser;
 use log::{debug, error, info, warn};
-use os_xtask_utils::{CommandExt, Qemu};
+use os_xtask_utils::{Cargo, CommandExt, Qemu};
+use std::path::PathBuf;
 
 //对该复合类型使用clap::Parser派生宏
 #[derive(Debug, Parser)]
@@ -17,6 +18,8 @@ enum SubCommand {
     //对子命令成员解释,如果不显式起名,则默认为该成员名的小写
     #[command(name = "qemu", about = "qemu args about")]
     Qemu(QemuOpts),
+    #[command(name = "make", about = "build args about")]
+    Make(BuildOpts),
 }
 
 #[derive(Debug, Parser)]
@@ -27,11 +30,29 @@ struct QemuOpts {
     gdb: Option<u16>,
 }
 
+#[derive(Debug, Parser)]
+struct BuildOpts {
+    /// Chapter number
+    #[arg(short, long, default_value = "os")]
+    bin: String,
+    /// Log level
+    #[arg(long, default_value = "trace")]
+    log: Option<String>,
+    /// Builds in release mode
+    #[arg(long, default_value_t = false)]
+    release: bool,
+    #[arg(short, long, default_value = "riscv64gc-unknown-none-elf")]
+    target: String,
+}
+
 fn main() {
     use SubCommand::*;
     pretty_env_logger::init();
     match Opts::parse().cmd {
         Qemu(qemu_opts) => qemu_opts.run(),
+        Make(build_opts) => {
+            let _ = build_opts.run();
+        }
     }
 }
 
@@ -49,5 +70,22 @@ impl QemuOpts {
             .args(["-device", "loader,file=os.bin,addr=0x80200000"]);
         info!("QEMU CMD: {:?}", qemu.info());
         qemu.invoke();
+    }
+}
+
+impl BuildOpts {
+    fn run(&self) -> PathBuf {
+        info!("build opt args {:?}", self);
+        let mut path = PathBuf::new();
+        Cargo::build()
+            .package(self.bin.as_str())
+            .target(self.target.as_str())
+            .invoke();
+        path.push("target");
+        path.push(self.target.as_str());
+        path.push(if self.release { "release" } else { "debug" });
+        path.push(self.bin.as_str());
+        info!("build success for {:?}", path);
+        path
     }
 }
