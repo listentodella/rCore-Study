@@ -102,10 +102,15 @@ impl BuildOpts {
     fn run(&self) -> PathBuf {
         info!("build opt args {:?}", self);
         let mut path = PathBuf::new();
-        Cargo::build()
+        let mut binding = Cargo::new("-C");
+        let cargo_cmd = binding
+            .arg(self.bin.as_str())
+            .args(["-Z", "unstable-options"])
+            .arg("build")
             .package(self.bin.as_str())
-            .target(self.target.as_str())
-            .invoke();
+            .target(self.target.as_str());
+        info!("{:?}", cargo_cmd.info());
+        cargo_cmd.invoke();
         path.push("target");
         path.push(self.target.as_str());
         path.push(if self.release { "release" } else { "debug" });
