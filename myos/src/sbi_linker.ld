@@ -1,1 +1,1 @@
-../sbi/src/sbi_linker.ld
+../mysbi/src/sbi_linker.ld

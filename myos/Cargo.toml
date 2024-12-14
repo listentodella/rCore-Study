@@ -1,3 +1,3 @@
 [workspace]
-members = ["xtask", "os", "sbi"]
+members = ["xtask", "os", "mysbi"]
 default-members = ["xtask"]
