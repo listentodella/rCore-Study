@@ -1,3 +1,5 @@
 .gdb_history
 target/
 os/src/link_app.S
+*.bin
+

@@ -1,3 +1,4 @@
 [submodule "myos/riscv_base"]
+	branch = master
 	path = myos/riscv_base
 	url = git@github.com:listentodella/riscv_programming_practice.git
