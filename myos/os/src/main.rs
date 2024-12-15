@@ -30,6 +30,7 @@ fn kernel_main() -> ! {
         base::load_store::global_asm_test();
         base::load_store::asm_all();
         base::load_store::asm_single();
+        base::pc::rel();
     }
 
     loop {}
