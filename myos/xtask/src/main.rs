@@ -40,6 +40,8 @@ struct QemuOpts {
     arch: String,
     #[arg(long, default_value = "1234")]
     gdb: Option<u16>,
+    #[arg(short, long, default_value_t = false)]
+    run: bool,
 }
 
 #[derive(Debug, Parser)]
@@ -106,11 +108,17 @@ impl QemuOpts {
         let mut binding = Qemu::system("riscv64");
         let qemu = binding
             .args(["-machine", "virt"])
+            .args(["-m", "128M"])
             .arg("-nographic")
             .arg("-bios")
             .arg(format!("{}", sbi.display()).as_str())
             .arg("-device")
-            .arg(format!("loader,file={},addr=0x80200000", os.display()).as_str());
+            .arg(format!("loader,file={},addr=0x80200000", os.display()).as_str())
+            .optional(&self.gdb, |qemu, gdb| {
+                if !self.run {
+                    qemu.args(["-S", "-gdb", format!("tcp::{}", gdb).as_str()]);
+                }
+            });
         debug!("QEMU CMD: {:?}", qemu.info());
         qemu.invoke();
     }

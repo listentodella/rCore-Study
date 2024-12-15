@@ -28,7 +28,11 @@ $ cargo asm --bin mysbi --verbose
 
 ### qemu  
 ```bash
-# 通过qemu加载mysbi与os
-$ cargo qemu
+# 直接通过qemu加载mysbi与os
+$ cargo qemu -r
+# qemu加载mysbi与os,并建立gdb端口,默认1234
+$ cargo qemu --gdb
+# 指定gdb端口
+$ cargo qemu --gdb 3333
 
 ```
