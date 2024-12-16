@@ -40,7 +40,7 @@ pub unsafe fn asm_single() {
     // "
     //     );
     //let my_test_data = 0x12345678abcdabcdu64;
-
+    // li 伪指令, 根据情况扩展为多条指令, 加载一个立即数
     asm!("li t0, 0x80200000");
     asm!("lb t1, (t0)   ");
     asm!("lb t1, 4(t0)  ");

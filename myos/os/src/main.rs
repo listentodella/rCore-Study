@@ -31,6 +31,24 @@ fn kernel_main() -> ! {
         base::load_store::asm_all();
         base::load_store::asm_single();
         base::pc::rel();
+        base::shift::test();
+        base::add_sub::test();
+        let a = 100u64;
+        let b = 1000u64;
+        if base::compare::is_little_than(a, b) {
+            //println!("{} < {}", a, b);
+            println!("<");
+        } else {
+            //println!("{} >= {}", a, b);
+            println!("!<");
+        }
+        if base::compare::is_little_than(b, a) {
+            //println!("{} < {}", a, b);
+            println!("<");
+        } else {
+            //println!("{} >= {}", a, b);
+            println!("!<");
+        }
     }
 
     loop {}
