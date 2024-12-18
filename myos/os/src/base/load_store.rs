@@ -1,7 +1,4 @@
 use core::arch::asm;
-use core::arch::global_asm;
-
-global_asm!(include_str!("asm_test.S"));
 
 pub unsafe fn global_asm_test() {
     extern "C" {

@@ -5,6 +5,7 @@ my_test_data:
 	.dword 0x12345678abcdabcd
 
 	.global load_store_test
+	.global compare_and_return
 
 load_store_test:
 	li t0, 0x80200000
@@ -22,3 +23,14 @@ load_store_test:
 	lla t1, my_test_data
 
 	ret
+
+compare_and_return:
+    bltu a0, a1, .L2
+    li a5, 0
+    j .L3
+.L2:
+    li a5, -1
+.L3:
+    mv a0, a5
+    ret
+
