@@ -42,11 +42,14 @@ fn kernel_main() -> ! {
             //println!("{} >= {}", a, b);
             println!("!<");
         }
+
+        let a = 100u64;
+        let b = 1000u64;
         if base::compare::is_little_than(b, a) {
             //println!("{} < {}", a, b);
             println!("<");
         } else {
-            //println!("{} >= {}", a, b);
+            println!("{} >= {}", a, b);
             println!("!<");
         }
     }
