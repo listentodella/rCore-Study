@@ -68,3 +68,25 @@ pub unsafe fn memcpy(src_addr: u64, dst_addr: u64, len: u64) {
     }
     my_memcpy_test(src_addr, dst_addr, len);
 }
+
+pub fn memset(addr: u64, val: u8, len: u64) {
+    //(addr as *mut u8).write_volatile(val);
+
+    // solution 1
+    (addr..addr + len).for_each(|a| unsafe {
+        (a as *mut u8).write_volatile(val);
+    });
+
+    // solution2
+    unsafe {
+        let slice = core::slice::from_raw_parts_mut(addr as *mut u8, len as usize);
+        slice.fill(val - 1);
+    }
+
+    // solution 3
+    unsafe {
+        core::slice::from_raw_parts_mut(addr as *mut u8, len as usize).fill(val - 2);
+    }
+
+    // solution4: asm code? make use of sb & sd
+}
