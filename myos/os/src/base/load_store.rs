@@ -61,3 +61,10 @@ pub unsafe fn asm_single() {
     //pc = x[1] <<==>> jalr x0, 0(x1)
     asm!("ret                 ");
 }
+
+pub unsafe fn memcpy(src_addr: u64, dst_addr: u64, len: u64) {
+    extern "C" {
+        fn my_memcpy_test(src_addr: u64, dst_addr: u64, len: u64);
+    }
+    my_memcpy_test(src_addr, dst_addr, len);
+}

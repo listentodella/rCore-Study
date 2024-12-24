@@ -58,6 +58,8 @@ fn kernel_main() -> ! {
         if !base::compare::is_zero(2) {
             println!("get non-zero!");
         }
+
+        base::load_store::memcpy(0x80200000u64, 0x80800000u64, 32u64);
     }
 
     loop {}
