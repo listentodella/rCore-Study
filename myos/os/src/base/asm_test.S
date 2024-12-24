@@ -34,3 +34,15 @@ compare_and_return:
     mv a0, a5
     ret
 
+.global beqz_test
+beqz_test:
+	beqz a0, .L4
+	li a5, 0
+	j .L5
+.L4:
+	li a5, 1
+.L5:
+	mv a0, a5
+	ret
+
+

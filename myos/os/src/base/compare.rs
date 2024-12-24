@@ -48,3 +48,15 @@ pub unsafe fn is_little_than(a: u64, b: u64) -> bool {
         false
     }
 }
+
+pub unsafe fn is_zero(a: u64) -> bool {
+    extern "C" {
+        fn beqz_test(a: u64) -> u8;
+    }
+    let x = beqz_test(a);
+    if x == 0 {
+        false
+    } else {
+        true
+    }
+}

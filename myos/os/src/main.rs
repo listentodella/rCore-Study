@@ -49,8 +49,14 @@ fn kernel_main() -> ! {
             //println!("{} < {}", a, b);
             println!("<");
         } else {
-            println!("{} >= {}", a, b);
             println!("!<");
+        }
+
+        if base::compare::is_zero(0) {
+            println!("get zero!");
+        }
+        if !base::compare::is_zero(2) {
+            println!("get non-zero!");
         }
     }
 
