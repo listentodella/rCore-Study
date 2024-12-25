@@ -62,6 +62,8 @@ fn kernel_main() -> ! {
         base::load_store::memcpy(0x80200000u64, 0x80800000u64, 32u64);
 
         base::load_store::memset(0x8080_0000, 0xFF, 32);
+
+        base::csr::csrrw();
     }
 
     loop {}
