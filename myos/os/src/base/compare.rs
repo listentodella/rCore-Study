@@ -1,4 +1,4 @@
-use core::arch::asm;
+use core::arch::{asm, naked_asm};
 
 /// bltu:无符号小于时分支跳转
 /// bltu rs1, rs2, offset if (rs1 < rs2) ...
@@ -47,6 +47,26 @@ pub unsafe fn is_little_than(a: u64, b: u64) -> bool {
     } else {
         false
     }
+}
+
+// naked_asm, 真正意义上的裸函数
+// 只能有一个,并且无法接收参数, 也无法带出返回值
+// 但是单步依旧无法直接在gdb上看source的状态,只能看assembly :(
+#[naked]
+//#[warn(undefined_naked_function_abi)]
+pub unsafe fn naked_is_little_than() {
+    naked_asm!(
+        "li a0, 100",
+        "li a1, 1000",
+        "bltu a0, a1, 2",
+        "li a5, 0",
+        "j 4",
+        "2:",
+        "li a5, -1",
+        "4:",
+        "mv a0, a5",
+        "ret"
+    );
 }
 
 pub unsafe fn is_zero(a: u64) -> bool {

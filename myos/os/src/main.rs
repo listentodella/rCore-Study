@@ -1,6 +1,6 @@
 #![no_std]
 #![no_main]
-
+#![feature(naked_functions)]
 use core::arch::asm;
 use core::arch::global_asm;
 
@@ -37,6 +37,8 @@ unsafe fn base_asm_test() {
     } else {
         println!("!<");
     }
+
+    base::compare::naked_is_little_than();
 
     if base::compare::is_zero(0) {
         println!("get zero!");
