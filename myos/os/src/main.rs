@@ -12,6 +12,48 @@ mod base;
 
 global_asm!(include_str!("boot.S"));
 
+unsafe fn base_asm_test() {
+    base::load_store::global_asm_test();
+    base::load_store::asm_all();
+    base::load_store::asm_single();
+    base::pc::rel();
+    base::shift::test();
+    base::add_sub::test();
+    let a = 100u64;
+    let b = 1000u64;
+    if base::compare::is_little_than(a, b) {
+        //println!("{} < {}", a, b);
+        println!("<");
+    } else {
+        //println!("{} >= {}", a, b);
+        println!("!<");
+    }
+
+    let a = 100u64;
+    let b = 1000u64;
+    if base::compare::is_little_than(b, a) {
+        //println!("{} < {}", a, b);
+        println!("<");
+    } else {
+        println!("!<");
+    }
+
+    if base::compare::is_zero(0) {
+        println!("get zero!");
+    }
+    if !base::compare::is_zero(2) {
+        println!("get non-zero!");
+    }
+
+    base::load_store::memcpy(0x80200000u64, 0x80800000u64, 32u64);
+
+    base::load_store::memset(0x8080_0000, 0xFF, 32);
+
+    base::csr::csrrw();
+
+    base::call::backup_and_restore_sp();
+}
+
 #[no_mangle]
 fn kernel_main() -> ! {
     let a = 12u8;
@@ -27,43 +69,7 @@ fn kernel_main() -> ! {
     println!(" hello myOS, {}", c);
 
     unsafe {
-        base::load_store::global_asm_test();
-        base::load_store::asm_all();
-        base::load_store::asm_single();
-        base::pc::rel();
-        base::shift::test();
-        base::add_sub::test();
-        let a = 100u64;
-        let b = 1000u64;
-        if base::compare::is_little_than(a, b) {
-            //println!("{} < {}", a, b);
-            println!("<");
-        } else {
-            //println!("{} >= {}", a, b);
-            println!("!<");
-        }
-
-        let a = 100u64;
-        let b = 1000u64;
-        if base::compare::is_little_than(b, a) {
-            //println!("{} < {}", a, b);
-            println!("<");
-        } else {
-            println!("!<");
-        }
-
-        if base::compare::is_zero(0) {
-            println!("get zero!");
-        }
-        if !base::compare::is_zero(2) {
-            println!("get non-zero!");
-        }
-
-        base::load_store::memcpy(0x80200000u64, 0x80800000u64, 32u64);
-
-        base::load_store::memset(0x8080_0000, 0xFF, 32);
-
-        base::csr::csrrw();
+        base_asm_test();
     }
 
     loop {}

@@ -65,3 +65,33 @@ beqz_test:
 	ret
 
 
+.globl add_test
+add_test:
+	add a0, a0, a1
+	nop
+	// 加载它的父函数的返回地址
+	ret
+
+.globl branch_test
+branch_test:
+	/*把返回地址ra寄存器保存到栈里*/
+	addi	sp,sp,-8
+	// 此时的ra指向父函数
+	sd	ra,(sp)
+	// 执行完成后,将记录返回地址(父函数)保存到sp
+
+	li a0, 1
+	li a1, 2
+	/* 调用add_test子函数 */
+	// call是伪指令, 本质是auipc与jalr的组合
+	// 将下一条指令的地址(pc+8)写入 x[rd],然后将 pc 设为 symbol
+	// 它并不会主动为我们备份当前的ra, 
+	// 不过会将当前的运行函数备份到ra(具体要看编译器选了哪个寄存器备份)
+	// 所以我们需要在上面自己备份父函数的返回地址到ra
+	call add_test
+	nop
+
+	/* 从栈中恢复ra返回地址*/
+	ld	ra,(sp)
+	addi	sp,sp,8
+	ret
