@@ -8,6 +8,7 @@ pub mod batch;
 mod lang_items;
 mod logging;
 mod sbi;
+mod stack_trace;
 mod sync;
 mod syscall;
 pub mod trap;
@@ -64,6 +65,7 @@ pub fn rust_main() -> ! {
 
     trap::init();
     batch::init();
+    panic!("Manually Shutdown the Machine!");
     batch::run_next_app();
 
     // 如果以panic等非正常途径的方式进入发散
