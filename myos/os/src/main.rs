@@ -46,14 +46,14 @@ unsafe fn base_asm_test() {
     if !base::compare::is_zero(2) {
         println!("get non-zero!");
     }
+    //base::fp::print_backtrace();
+    panic!();
 
     base::load_store::memcpy(0x80200000u64, 0x80800000u64, 32u64);
 
     base::load_store::memset(0x8080_0000, 0xFF, 32);
 
     base::csr::csrrw();
-
-    base::ra::backup_ra();
 }
 
 #[no_mangle]
