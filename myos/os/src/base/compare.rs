@@ -54,7 +54,9 @@ pub unsafe fn is_little_than(a: u64, b: u64) -> bool {
 // 但是单步依旧无法直接在gdb上看source的状态,只能看assembly :(
 #[naked]
 //#[warn(undefined_naked_function_abi)]
-pub unsafe fn naked_is_little_than() {
+// 使用rust的函数签名已经没有意义
+//pub unsafe fn naked_is_little_than() {
+pub unsafe extern "C" fn naked_is_little_than() {
     naked_asm!(
         "li a0, 100",
         "li a1, 1000",

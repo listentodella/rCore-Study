@@ -1,4 +1,4 @@
-pub fn backup_and_restore_sp() {
+pub fn backup_ra() {
     extern "C" {
         fn branch_test();
     }

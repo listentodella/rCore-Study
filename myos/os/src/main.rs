@@ -53,7 +53,7 @@ unsafe fn base_asm_test() {
 
     base::csr::csrrw();
 
-    base::call::backup_and_restore_sp();
+    base::ra::backup_ra();
 }
 
 #[no_mangle]
