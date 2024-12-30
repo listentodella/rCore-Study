@@ -11,6 +11,12 @@ _start:
 	li t0, 4096
 	add sp, sp, t0
 
+	/*
+	 * 备份M模式SP到mscratch
+	 * 下次trap到M模式可以获取M的sp
+	 */
+	csrw mscratch, sp
+
 	/* 跳转到 sbi_main 函数 */
 	tail sbi_main
 

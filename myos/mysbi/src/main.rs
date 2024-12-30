@@ -6,6 +6,7 @@ use core::arch::global_asm;
 use riscv::register::{mepc, mstatus, satp, sie, stvec};
 
 mod lang_item;
+mod sbi_trap;
 
 global_asm!(include_str!("sbi_boot.S"));
 
