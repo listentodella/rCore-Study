@@ -4,6 +4,7 @@
 use core::arch::asm;
 use core::arch::global_asm;
 use riscv::register::{mepc, mstatus, satp, sie, stvec};
+use sbi_trap::sbi_trap_init;
 
 mod lang_item;
 mod sbi_trap;
@@ -14,6 +15,9 @@ const FW_JUMP_ADDR: usize = 0x8020_0000;
 
 #[no_mangle]
 fn sbi_main() {
+    // 设置M模式的异常向量表
+    sbi_trap_init();
+
     // 设置跳转模式为S模式
     let mut val = mstatus::read();
     val.set_mpp(mstatus::MPP::Supervisor);
