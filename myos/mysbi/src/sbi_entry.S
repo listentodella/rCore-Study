@@ -15,13 +15,13 @@ sbi_exception_vector:
 	//从mscratch获取M模式之前备份的sp
 	//并将S模式的sp保存到mscratch
 	csrrw sp, mscratch, sp
-	//x1, x3~x31, mepc, mstatus
+	// mepc + x1~x31 + mstatus = 33
 	addi sp, sp, -33*8
 
 	sd x1, 1*8(sp)
     # skip sp(x2), we will save it later
 	sd x3, 3*8(sp)
-    # skip tp(x4), application does not use it
+    # skip tp(x4), application does not use it, but reserve it's mem
     # save x5~x31
     .set n, 5
     .rept 27
@@ -51,6 +51,10 @@ sbi_exception_vector:
 	csrrw t0, mscratch, t0
 	sd t0, 2*8(sp)
 
+	/* 调用rust的sbi_trap_handler */
+	/* sbi_trap_regs */
+	mv a0, sp 
+	call sbi_trap_handler
 
 
 

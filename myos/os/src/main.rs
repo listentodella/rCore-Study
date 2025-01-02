@@ -6,6 +6,7 @@ use core::arch::global_asm;
 
 mod console;
 mod lang_item;
+mod syscall;
 mod uart;
 
 mod base;
