@@ -6,8 +6,10 @@ use core::arch::global_asm;
 use riscv::register::{mepc, mstatus, satp, sie, stvec};
 use sbi_trap::sbi_trap_init;
 
+mod console;
 mod lang_item;
 mod sbi_trap;
+mod uart;
 
 global_asm!(include_str!("sbi_boot.S"));
 
@@ -15,6 +17,15 @@ const FW_JUMP_ADDR: usize = 0x8020_0000;
 
 #[no_mangle]
 fn sbi_main() {
+    uart::init();
+    println!(
+        r"
+ |\   /|     __ __ _
+ | \ / |  / (_ |__)|
+ |  |  |\/  __)|__)|
+--------/-----------
+"
+    );
     // 设置M模式的异常向量表
     sbi_trap_init();
 

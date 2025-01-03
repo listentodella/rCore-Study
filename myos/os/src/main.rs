@@ -48,6 +48,9 @@ unsafe fn base_asm_test() {
         println!("get non-zero!");
     }
     //base::fp::print_backtrace();
+
+    syscall::sbi_put_string("Hello SBI syscall!");
+
     panic!();
 
     base::load_store::memcpy(0x80200000u64, 0x80800000u64, 32u64);
