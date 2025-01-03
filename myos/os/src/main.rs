@@ -49,7 +49,7 @@ unsafe fn base_asm_test() {
     }
     //base::fp::print_backtrace();
 
-    syscall::sbi_put_string("Hello SBI syscall!");
+    syscall::sbi_put_string("Hello SBI syscall!\n");
 
     panic!();
 
