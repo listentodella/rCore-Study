@@ -1,14 +1,15 @@
 use core::{arch::global_asm, panic};
 use riscv::register::{
     mcause::{self, Trap},
-    mepc, mie, mstatus, mtval, mtvec,
+    medeleg::{self, Medeleg},
+    mepc, mideleg, mie, mstatus, mtval, mtvec,
 };
 
 use crate::{print, println, uart};
 
 global_asm!(include_str!("sbi_entry.S"));
 
-pub fn sbi_trap_init() {
+pub fn init() {
     extern "C" {
         fn sbi_exception_vector();
     }
@@ -24,6 +25,33 @@ pub fn sbi_trap_init() {
         mie::clear_msoft();
         mie::clear_mtimer();
         mie::clear_mext();
+    }
+}
+
+pub fn delegate() {
+    unsafe {
+        // 将如下中断委托给S mode
+        mideleg::set_stimer();
+        mideleg::set_ssoft();
+        mideleg::set_sext();
+
+        // 将如下异常委托给S mode
+        // 指令地址未对齐异常
+        medeleg::set_instruction_misaligned();
+        // 指令缺页异常
+        medeleg::set_instruction_page_fault();
+        // 加载缺页异常
+        medeleg::set_load_page_fault();
+        // 存储/AMO缺页异常
+        medeleg::set_store_page_fault();
+        // 断点异常
+        medeleg::set_breakpoint();
+        // 系统调用异常
+        medeleg::set_user_env_call();
+        // 存储访问异常
+        medeleg::set_store_fault();
+        // 加载访问异常
+        medeleg::set_load_fault();
     }
 }
 
