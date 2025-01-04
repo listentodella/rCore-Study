@@ -7,6 +7,7 @@ use core::arch::global_asm;
 mod console;
 mod lang_item;
 mod syscall;
+mod trap;
 mod uart;
 
 mod base;
@@ -49,9 +50,7 @@ unsafe fn base_asm_test() {
     }
     //base::fp::print_backtrace();
 
-    syscall::sbi_put_string("Hello SBI syscall!\n");
-
-    panic!();
+    //panic!();
 
     base::load_store::memcpy(0x80200000u64, 0x80800000u64, 32u64);
 
@@ -62,6 +61,8 @@ unsafe fn base_asm_test() {
 
 #[no_mangle]
 fn kernel_main() -> ! {
+    clear_bss();
+    syscall::sbi_put_string("Hello SBI syscall!\n");
     let a = 12u8;
     let b = 32u8;
     let c = a + b;
@@ -71,12 +72,23 @@ fn kernel_main() -> ! {
     uart::putchar('s' as usize);
     uart::putchar('c' as usize);
     uart::putchar('v' as usize);
+    trap::init();
 
-    println!(" hello myOS, {}", c);
+    println!("hello myOS, {}", c);
 
     unsafe {
         base_asm_test();
     }
 
     loop {}
+}
+
+fn clear_bss() {
+    extern "C" {
+        fn sbss();
+        fn ebss();
+    }
+    (sbss as usize..ebss as usize).for_each(|addr| unsafe {
+        (addr as *mut u8).write_volatile(0);
+    });
 }
