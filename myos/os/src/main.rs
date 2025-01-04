@@ -77,6 +77,8 @@ fn kernel_main() -> ! {
     println!("hello myOS, {}", c);
 
     unsafe {
+        // this will trigger a load fault
+        let a = (0x7000_0000 as *const u8).read_volatile();
         base_asm_test();
     }
 
