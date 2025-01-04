@@ -4,7 +4,6 @@
 use core::arch::asm;
 use core::arch::global_asm;
 use riscv::register::{mepc, mstatus, satp, sie, stvec};
-use sbi_trap::sbi_trap_init;
 
 mod console;
 mod lang_item;
@@ -27,13 +26,15 @@ fn sbi_main() {
 "
     );
     // 设置M模式的异常向量表
-    sbi_trap_init();
+    sbi_trap::init();
 
     // 设置跳转模式为S模式
     let mut val = mstatus::read();
     val.set_mpp(mstatus::MPP::Supervisor);
     val.set_mpie(false);
     mstatus::write(val);
+
+    sbi_trap::delegate();
 
     // 设置M模式的异常程序计数器, 用于 mret 跳转
     mepc::write(FW_JUMP_ADDR);
