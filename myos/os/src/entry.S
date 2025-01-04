@@ -69,7 +69,7 @@ do_exception_vector:
 	csrw sscratch, x0
 	la   ra, ret_from_exception
 	mv   a0, sp                 // registers context
-	mv   a1, s4
+	mv   a1, s4                 // scause
 	tail do_exception
 
 ret_from_exception:
