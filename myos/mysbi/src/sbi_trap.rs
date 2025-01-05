@@ -111,6 +111,8 @@ pub fn sbi_trap_handler(regs: &mut SbiTrapRegs) -> &mut SbiTrapRegs {
                 //println!("sbi syscalled {}", ecall_id);
                 ret = sbi_ecall_handle(ecall_id, regs);
                 msg = "ecall handle failed!";
+            } else {
+                println!("which exception {:?}", exception);
             }
         }
         Trap::Interrupt(interrupt) => match interrupt {
