@@ -7,6 +7,7 @@ use core::arch::global_asm;
 mod console;
 mod lang_item;
 mod syscall;
+mod timer;
 mod trap;
 mod uart;
 
@@ -76,10 +77,12 @@ fn kernel_main() -> ! {
 
     println!("hello myOS, {}", c);
 
+    timer::init();
+
     unsafe {
         // this will trigger a load fault
-        let a = (0x7000_0000 as *const u8).read_volatile();
-        base_asm_test();
+        //let a = (0x7000_0000 as *const u8).read_volatile();
+        //base_asm_test();
     }
 
     loop {}

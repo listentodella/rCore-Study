@@ -1,8 +1,11 @@
 use core::{arch::global_asm, panic};
-use riscv::register::{
-    mcause::{self, Trap},
-    medeleg::{self, Medeleg},
-    mepc, mideleg, mie, mstatus, mtval, mtvec,
+use riscv::{
+    interrupt::machine::{Exception, Interrupt},
+    register::{
+        mcause::{self, Trap},
+        medeleg, mepc, mideleg, mie, mip, mstatus, mtval, mtvec,
+    },
+    ExceptionNumber,
 };
 
 use crate::{print, println, uart};
@@ -100,21 +103,82 @@ pub fn sbi_trap_handler(regs: &mut SbiTrapRegs) -> &mut SbiTrapRegs {
     let mcause = mcause::read();
     let ecall_id = regs.a7;
     let mut msg = "which handle ???";
-    match mcause.cause() {
-        Trap::Exception(num) => {
-            if num == 0x09 {
+    let raw_trap = mcause.cause();
+    let trap: Trap<Interrupt, Exception> = raw_trap.try_into().unwrap();
+    match trap {
+        Trap::Exception(exception) => {
+            if exception.number() == 0x09 {
                 //println!("sbi syscalled {}", ecall_id);
                 ret = sbi_ecall_handle(ecall_id, regs);
                 msg = "ecall handle failed!";
             }
         }
-        Trap::Interrupt(_num) => {}
+        Trap::Interrupt(interrupt) => match interrupt {
+            Interrupt::MachineTimer => {
+                //println!("interrupt triggered {:?}", interrupt);
+                sbi_timer_process();
+                ret = 0;
+            }
+            _ => {
+                ret = 1;
+                msg = "unsupported interrupt";
+            }
+        },
     }
 
     if ret != 0 {
         sbi_trap_error(regs, msg, ret);
     }
     regs
+}
+
+const SBI_SET_TIMER: usize = 0;
+const SBI_CONSOLE_PUTCHAR: usize = 1;
+const SBI_CONSOLE_GETCHAR: usize = 2;
+fn sbi_ecall_handle(id: usize, regs: &mut SbiTrapRegs) -> usize {
+    let ret = match id {
+        SBI_SET_TIMER => {
+            clint_timer_event_start(regs.a0);
+            0
+        }
+        SBI_CONSOLE_PUTCHAR => {
+            uart::putchar(regs.a0);
+            0
+        }
+        SBI_CONSOLE_GETCHAR => 0,
+        _ => 1,
+    };
+
+    /* 系统调用返回的是系统调用指令
+    （例如ECALL指令）的下一条指令 */
+    if ret == 0 {
+        regs.mepc += 4;
+    }
+
+    ret
+}
+
+const VIRT_CLINT_ADDR: usize = 0x200_0000;
+const VIRT_CLINT_TIMER_CMP: usize = VIRT_CLINT_ADDR + 0x4000;
+const VIRT_CLINT_TIMER_VAL: usize = VIRT_CLINT_ADDR + 0xbff8;
+const CLINT_TIMER_BASE_FREQ: usize = 0x1000_0000;
+fn clint_timer_event_start(next_event: usize) {
+    unsafe {
+        (VIRT_CLINT_TIMER_CMP as *mut usize).write_volatile(next_event);
+        // 清S模式的timer pending irq
+        mip::clear_stimer();
+        // 使能M模式的timer中断
+        mie::set_mtimer();
+    }
+}
+
+fn sbi_timer_process() {
+    unsafe {
+        // 关闭M模式的timer 中断
+        mie::clear_mtimer();
+        // 使能S模式的timer pending 中断
+        mip::set_stimer();
+    }
 }
 
 fn sbi_trap_error(regs: &mut SbiTrapRegs, msg: &str, ret: usize) {
@@ -171,30 +235,4 @@ fn sbi_trap_error(regs: &mut SbiTrapRegs, msg: &str, ret: usize) {
     println!(" ra : 0x{:016x}", regs.ra);
 
     panic!("!!!SBI PANIC!!!")
-}
-
-const SBI_CONSOLE_PUTCHAR: usize = 1;
-const SBI_CONSOLE_GETCHAR: usize = 2;
-fn sbi_ecall_handle(id: usize, regs: &mut SbiTrapRegs) -> usize {
-    let mut ret = 0usize;
-    match id {
-        SBI_CONSOLE_PUTCHAR => {
-            uart::putchar(regs.a0);
-            ret = 0;
-        }
-        SBI_CONSOLE_GETCHAR => {
-            ret = 0;
-        }
-        _ => {
-            ret = 1;
-        }
-    }
-
-    /* 系统调用返回的是系统调用指令
-    （例如ECALL指令）的下一条指令 */
-    if ret == 0 {
-        regs.mepc += 4;
-    }
-
-    ret
 }
