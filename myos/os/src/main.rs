@@ -79,6 +79,8 @@ fn kernel_main() -> ! {
 
     timer::init();
 
+    trap::arch_local_irq_enable(true);
+
     unsafe {
         // this will trigger a load fault
         //let a = (0x7000_0000 as *const u8).read_volatile();

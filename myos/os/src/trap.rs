@@ -3,7 +3,7 @@ use riscv::{
     interrupt::supervisor::{Exception, Interrupt},
     register::{
         scause::{Scause, Trap},
-        sie, sscratch,
+        sie, sscratch, sstatus,
         stvec::{self, TrapMode},
     },
 };
@@ -11,6 +11,16 @@ use riscv::{
 use crate::println;
 
 global_asm!(include_str!("entry.S"));
+
+pub fn arch_local_irq_enable(is_enable: bool) {
+    unsafe {
+        if is_enable {
+            sstatus::set_sie();
+        } else {
+            sstatus::clear_sie();
+        }
+    }
+}
 
 pub fn init() {
     extern "C" {
