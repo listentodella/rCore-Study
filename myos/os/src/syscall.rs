@@ -18,6 +18,11 @@ fn syscall(id: usize, args: [usize; 3]) -> isize {
     ret
 }
 
+const SBI_SET_TIMER: usize = 0;
+pub fn sbi_set_timer(stime_val: usize) -> isize {
+    syscall(SBI_SET_TIMER, [stime_val, 0, 0])
+}
+
 const SBI_CONSOLE_PUTCHAR: usize = 1;
 const SBI_CONSOLE_GETCHAR: usize = 2;
 pub fn sbi_putchar(c: char) -> isize {
