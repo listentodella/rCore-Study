@@ -1,4 +1,4 @@
-use crate::{println, syscall::sbi_set_timer};
+use crate::syscall::sbi_set_timer;
 use riscv::register::sie;
 
 const VIRT_CLINT_ADDR: usize = 0x200_0000;
@@ -11,7 +11,7 @@ fn get_cycles() -> usize {
 }
 
 pub fn init() {
-    sbi_set_timer(get_cycles() + CLINT_TIMER_BASE_FREQ);
+    sbi_set_timer(get_cycles() + CLINT_TIMER_BASE_FREQ / 1000);
     unsafe {
         sie::set_stimer();
     }
