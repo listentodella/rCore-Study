@@ -8,7 +8,7 @@ use riscv::{
     },
 };
 
-use crate::println;
+use crate::{println, timer::handle_timer_irq};
 
 global_asm!(include_str!("entry.S"));
 
@@ -46,7 +46,7 @@ pub fn init() {
 
 #[no_mangle]
 fn do_exception(regs: &mut KernelTrapRegs, scause: usize) {
-    println!("scause = 0x{:016x}", scause);
+    //println!("scause = 0x{:016x}", scause);
     // 其实可以直接用 scause::read() 来获取
     // 这里指示展示寄存器传参,以及 transmute 的简单使用
     let scause: Scause = unsafe { core::mem::transmute(scause) };
@@ -56,7 +56,8 @@ fn do_exception(regs: &mut KernelTrapRegs, scause: usize) {
     match trap {
         Trap::Interrupt(interrupt) => match interrupt {
             Interrupt::SupervisorTimer => {
-                println!("SupervisorTimer handle");
+                //println!("SupervisorTimer handle");
+                handle_timer_irq();
             }
             Interrupt::SupervisorSoft => {
                 println!("SupervisorSoft handle");
