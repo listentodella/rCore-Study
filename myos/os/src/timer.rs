@@ -21,9 +21,9 @@ pub fn init() {
 }
 
 pub fn handle_timer_irq() {
-    unsafe {
-        sie::clear_stimer();
-    }
+    // unsafe {
+    //     sie::clear_stimer();
+    // }
     //init();
     let val = JIFFIES.load(Ordering::Relaxed);
     JIFFIES.store(val.wrapping_add(1), Ordering::Relaxed);
