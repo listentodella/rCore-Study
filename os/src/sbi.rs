@@ -13,3 +13,9 @@ pub fn shutdown(failure: bool) -> ! {
 
     unreachable!()
 }
+
+pub fn set_timer(timer: usize) {
+    //const SBI_SET_TIMER: usize = 0;
+    //sbi_rt::sbi_call(SBI_SET_TIMER, timer, 0, 0);
+    sbi_rt::set_timer(timer as _);
+}

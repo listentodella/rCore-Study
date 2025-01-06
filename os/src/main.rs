@@ -4,13 +4,18 @@
 #[macro_use]
 mod console;
 
+#[path = "board/qemu.rs"]
+mod board;
+
 pub mod batch;
+mod config;
 mod lang_items;
 mod logging;
 mod sbi;
 mod stack_trace;
 mod sync;
 mod syscall;
+mod timer;
 pub mod trap;
 
 use core::arch::global_asm;
@@ -65,13 +70,14 @@ pub fn rust_main() -> ! {
 
     trap::init();
     batch::init();
-    panic!("Manually Shutdown the Machine!");
+    trap::enable_timer_interrupt();
+    timer::set_next_trigger();
     batch::run_next_app();
 
     // 如果以panic等非正常途径的方式进入发散
     // make 检查返回值会报错, 属于正常现象
     //panic!("Manually Shutdown the Machine!");
-    sbi::shutdown(false)
+    //sbi::shutdown(false)
 }
 
 fn clear_bss() {

@@ -1,11 +1,12 @@
-use crate::batch::run_next_app;
 use crate::syscall::syscall;
+use crate::{batch::run_next_app, timer::set_next_trigger};
 use core::arch::global_asm;
 use riscv::register::{
     mtvec::TrapMode,
-    scause::{self, Exception, Trap},
+    scause::{self, Exception, Interrupt, Trap},
     stval, stvec,
 };
+use riscv::register::{sie, sstatus};
 
 use log::*;
 
@@ -21,6 +22,14 @@ pub fn init() {
     }
     unsafe {
         stvec::write(__alltraps as usize, TrapMode::Direct);
+    }
+}
+
+pub fn enable_timer_interrupt() {
+    debug!("[kernel] enable timer interrupt");
+    unsafe {
+        sie::set_stimer();
+        sstatus::set_sie();
     }
 }
 
@@ -40,6 +49,10 @@ pub fn trap_handler(cx: &mut TrapContext) -> &mut TrapContext {
         Trap::Exception(Exception::IllegalInstruction) => {
             error!("[kernel] IllegalInstruction in application, kernel killed it.");
             run_next_app();
+        }
+        Trap::Interrupt(Interrupt::SupervisorTimer) => {
+            debug!("[kernel] SupervisorTimer");
+            set_next_trigger();
         }
         _ => {
             panic!(
