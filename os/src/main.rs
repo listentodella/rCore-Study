@@ -10,6 +10,7 @@ mod board;
 pub mod batch;
 mod config;
 mod lang_items;
+mod loader;
 mod logging;
 mod sbi;
 mod stack_trace;
