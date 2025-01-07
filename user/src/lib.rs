@@ -46,3 +46,8 @@ pub fn write(fd: usize, buffer: &[u8]) -> isize {
 pub fn exit(exit_code: i32) -> isize {
     sys_exit(exit_code)
 }
+
+// yield 是 rust 的关键字, 所以只能改名
+pub fn yield_() -> isize {
+    sys_yield()
+}

@@ -10,6 +10,10 @@ pub fn sys_exit(exit_code: i32) -> ! {
     run_next_app()
 }
 
+pub fn sys_yield() -> isize {
+    0
+}
+
 pub fn sys_get_time(ts: *mut TimeVal, _tz: usize) -> isize {
     let timestamp = get_time_us();
     let sec = timestamp / (1_000_000);
