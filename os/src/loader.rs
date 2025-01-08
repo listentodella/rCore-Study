@@ -8,7 +8,7 @@ pub fn load_apps() {
         fn _num_app();
     }
     let num_app_ptr = _num_app as *const usize;
-    let num_app = unsafe { num_app_ptr.read_volatile() };
+    let num_app = get_num_app();
     let app_start = unsafe { core::slice::from_raw_parts(num_app_ptr.add(1), num_app + 1) };
 
     for i in 0..num_app {
@@ -32,4 +32,12 @@ pub fn load_apps() {
 
 fn get_base_i(app_id: usize) -> usize {
     APP_BASE_ADDRESS + app_id * APP_SIZE_LIMIT
+}
+
+/// Get the total number of applications.
+pub fn get_num_app() -> usize {
+    extern "C" {
+        fn _num_app();
+    }
+    unsafe { (_num_app as *const usize).read_volatile() }
 }
