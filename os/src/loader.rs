@@ -1,5 +1,6 @@
 use crate::config::*;
 use core::arch::asm;
+use log::*;
 
 use crate::{
     config::{APP_BASE_ADDRESS, APP_SIZE_LIMIT},
@@ -54,6 +55,7 @@ pub fn load_apps() {
     }
     let num_app_ptr = _num_app as *const usize;
     let num_app = get_num_app();
+    info!("[kernel] get apps num = {}", num_app);
     let app_start = unsafe { core::slice::from_raw_parts(num_app_ptr.add(1), num_app + 1) };
 
     for i in 0..num_app {
@@ -70,6 +72,7 @@ pub fn load_apps() {
         let dst = unsafe { core::slice::from_raw_parts_mut(base_i as *mut u8, src.len()) };
         dst.copy_from_slice(src);
     }
+    info!("[kernel] all apps load done");
     unsafe {
         asm!("fence.i");
     }

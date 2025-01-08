@@ -38,9 +38,13 @@ lazy_static! {
         // app第一次被运行之前, 在这里构造任务上下文
         // 即通过app_init_ctx 将app的入口地址, sp 压入栈顶
         // 然后通过goto_restore构造TaskControlBlock要用到的TaskContext
-        for i in 0..num_app {
-            tasks[i].task_ctx = TaskContext::goto_restore(init_app_ctx(i));
-            tasks[i].task_status = TaskStatus::Ready;
+        // for i in 0..num_app {
+        //     tasks[i].task_ctx = TaskContext::goto_restore(init_app_ctx(i));
+        //     tasks[i].task_status = TaskStatus::Ready;
+        // }
+        for (i, task) in tasks.iter_mut().enumerate() {
+            task.task_ctx = TaskContext::goto_restore(init_app_ctx(i));
+            task.task_status = TaskStatus::Ready;
         }
         TaskManager {
             num_app,
