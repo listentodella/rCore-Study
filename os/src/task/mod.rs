@@ -1,12 +1,17 @@
 mod context;
 
 use crate::config::MAX_APP_NUM;
-pub use context::TaskContext;
+use context::TaskContext;
+use core::panic;
 use lazy_static::lazy_static;
 use switch::__switch;
 use task::{TaskControlBlock, TaskStatus};
 
-use crate::{loader::get_num_app, sync::UPSafeCell, trap::TrapContext};
+use crate::{
+    loader::{get_num_app, init_app_ctx},
+    sync::UPSafeCell,
+    trap::TrapContext,
+};
 mod switch;
 
 // 该属性可以避免clippy的warning
@@ -27,11 +32,14 @@ lazy_static! {
     pub static ref TASK_MANAGER: TaskManager = {
         let num_app = get_num_app();
         let mut tasks = [TaskControlBlock {
-            task_ctx: TaskStatus::zero_init(),
+            task_ctx: TaskContext::zero_init(),
             task_status: TaskStatus::Uninit,
         }; MAX_APP_NUM];
+        // app第一次被运行之前, 在这里构造任务上下文
+        // 即通过app_init_ctx 将app的入口地址, sp 压入栈顶
+        // 然后通过goto_restore构造TaskControlBlock要用到的TaskContext
         for i in 0..num_app {
-            tasks[i].task_ctx = TrapContext::goto_restore(init_app_ctx(i));
+            tasks[i].task_ctx = TaskContext::goto_restore(init_app_ctx(i));
             tasks[i].task_status = TaskStatus::Ready;
         }
         TaskManager {
@@ -86,6 +94,20 @@ impl TaskManager {
             panic!("[kernel] all apps completed!");
         }
     }
+
+    fn run_first_task(&self) -> ! {
+        let mut inner = self.inner.exclusive_access();
+        let task0 = &mut inner.tasks[0];
+        task0.task_status = TaskStatus::Running;
+        let next_task_ctx_ptr = &task0.task_ctx as *const TaskContext;
+        drop(inner);
+        let mut _unused = TaskContext::zero_init();
+        unsafe {
+            __switch(&mut _unused as *mut TaskContext, next_task_ctx_ptr);
+        }
+
+        panic!("unreachable in run_first_task!");
+    }
 }
 
 fn mark_current_suspended() {
@@ -108,4 +130,8 @@ pub fn suspend_current_and_run_next() {
 pub fn exit_current_and_run_next() {
     mark_current_exited();
     run_next_task();
+}
+
+pub fn run_first_task() -> ! {
+    TASK_MANAGER.run_first_task()
 }

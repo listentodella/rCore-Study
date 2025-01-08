@@ -71,10 +71,12 @@ pub fn rust_main() -> ! {
     error!("[kernel] .bss [{:#x}, {:#x})", sbss as usize, ebss as usize);
 
     trap::init();
-    batch::init();
-    trap::enable_timer_interrupt();
-    timer::set_next_trigger();
-    batch::run_next_app();
+    //batch::init();
+    //trap::enable_timer_interrupt();
+    //timer::set_next_trigger();
+    //batch::run_next_app();
+    loader::load_apps();
+    task::run_first_task();
 
     // 如果以panic等非正常途径的方式进入发散
     // make 检查返回值会报错, 属于正常现象
