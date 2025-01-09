@@ -1,4 +1,5 @@
 #[derive(Copy, Clone)]
+#[repr(C)] //要与C接口交互,务必要用该属性!
 pub struct TaskContext {
     ra: usize,
     sp: usize,

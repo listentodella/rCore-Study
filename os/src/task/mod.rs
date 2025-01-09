@@ -10,7 +10,6 @@ use task::{TaskControlBlock, TaskStatus};
 use crate::{
     loader::{get_num_app, init_app_ctx},
     sync::UPSafeCell,
-    trap::TrapContext,
 };
 mod switch;
 
