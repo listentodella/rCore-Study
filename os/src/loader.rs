@@ -71,6 +71,7 @@ pub fn load_apps() {
         };
         let dst = unsafe { core::slice::from_raw_parts_mut(base_i as *mut u8, src.len()) };
         dst.copy_from_slice(src);
+        info!("[kernel] load app {} to {:?}", i, dst.as_ptr());
     }
     info!("[kernel] all apps load done");
     unsafe {

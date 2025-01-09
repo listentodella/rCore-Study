@@ -1,4 +1,5 @@
 use crate::syscall::syscall;
+use crate::task::exit_current_and_run_next;
 use crate::{batch::run_next_app, timer::set_next_trigger};
 use core::arch::global_asm;
 use riscv::register::{
@@ -44,11 +45,13 @@ pub fn trap_handler(cx: &mut TrapContext) -> &mut TrapContext {
         }
         Trap::Exception(Exception::StoreFault) | Trap::Exception(Exception::StorePageFault) => {
             error!("[kernel] PageFault in application, kernel killed it.");
-            run_next_app();
+            //run_next_app();
+            exit_current_and_run_next();
         }
         Trap::Exception(Exception::IllegalInstruction) => {
             error!("[kernel] IllegalInstruction in application, kernel killed it.");
-            run_next_app();
+            //run_next_app();
+            exit_current_and_run_next();
         }
         Trap::Interrupt(Interrupt::SupervisorTimer) => {
             debug!("[kernel] SupervisorTimer");

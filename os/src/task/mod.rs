@@ -1,6 +1,6 @@
 mod context;
 
-use crate::config::MAX_APP_NUM;
+use crate::{config::MAX_APP_NUM, sbi::shutdown};
 use context::TaskContext;
 use core::panic;
 use lazy_static::lazy_static;
@@ -11,6 +11,7 @@ use crate::{
     loader::{get_num_app, init_app_ctx},
     sync::UPSafeCell,
 };
+use log::info;
 mod switch;
 
 // 该属性可以避免clippy的warning
@@ -94,7 +95,9 @@ impl TaskManager {
             }
             // go back to user mode
         } else {
-            panic!("[kernel] all apps completed!");
+            //panic!("[kernel] all apps completed!");
+            info!("[kernel] all apps completed!");
+            shutdown(true);
         }
     }
 
