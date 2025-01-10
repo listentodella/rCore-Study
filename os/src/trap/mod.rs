@@ -1,5 +1,5 @@
 use crate::syscall::syscall;
-use crate::task::exit_current_and_run_next;
+use crate::task::{exit_current_and_run_next, suspend_current_and_run_next};
 use crate::{batch::run_next_app, timer::set_next_trigger};
 use core::arch::global_asm;
 use riscv::register::{
@@ -56,6 +56,7 @@ pub fn trap_handler(cx: &mut TrapContext) -> &mut TrapContext {
         Trap::Interrupt(Interrupt::SupervisorTimer) => {
             debug!("[kernel] SupervisorTimer");
             set_next_trigger();
+            suspend_current_and_run_next();
         }
         _ => {
             panic!(

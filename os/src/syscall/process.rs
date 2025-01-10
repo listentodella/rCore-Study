@@ -18,14 +18,15 @@ pub fn sys_yield() -> isize {
     0
 }
 
-pub fn sys_get_time(ts: *mut TimeVal, _tz: usize) -> isize {
+pub fn sys_get_time(_ts: *mut TimeVal, _tz: usize) -> isize {
     let timestamp = get_time_us();
-    let sec = timestamp / (1_000_000);
-    let usec = timestamp - sec * 1_000_000;
-    unsafe {
-        ts.write_volatile(TimeVal { sec, usec });
-    }
-    0
+    timestamp as isize
+    // let sec = timestamp / (1_000_000);
+    // let usec = timestamp - sec * 1_000_000;
+    // unsafe {
+    //     ts.write_volatile(TimeVal { sec, usec });
+    // }
+    // 0
 }
 
 #[repr(C)]

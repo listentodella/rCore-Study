@@ -72,10 +72,10 @@ pub fn rust_main() -> ! {
 
     trap::init();
     //batch::init();
-    //trap::enable_timer_interrupt();
-    //timer::set_next_trigger();
     //batch::run_next_app();
     loader::load_apps();
+    trap::enable_timer_interrupt();
+    timer::set_next_trigger();
     task::run_first_task();
 
     // 如果以panic等非正常途径的方式进入发散
