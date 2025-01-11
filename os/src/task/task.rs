@@ -21,7 +21,7 @@ pub struct TaskInfo {
     // task id
     pub id: usize,
     pub status: TaskStatus,
-    pub call: [SyscallInfo; MAX_SYSCALL_NUM],
+    pub syscall: [SyscallInfo; MAX_SYSCALL_NUM],
     pub time: usize,
 }
 
@@ -38,7 +38,7 @@ impl TaskInfo {
         Self {
             id: 0,
             status: TaskStatus::Uninit,
-            call: [SyscallInfo { id: 0, times: 0 }; MAX_SYSCALL_NUM],
+            syscall: [SyscallInfo { id: 0, times: 0 }; MAX_SYSCALL_NUM],
             time: 0,
         }
     }

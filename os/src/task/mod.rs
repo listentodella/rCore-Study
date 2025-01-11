@@ -58,7 +58,27 @@ lazy_static! {
     };
 }
 
+const SYSCALL_WRITE: usize = 64;
+const SYSCALL_EXIT: usize = 93;
+const SYSCALL_TS: usize = 169;
+const SYSCALL_YIELD: usize = 124;
+//const SYSCALL_TASK_INFO: usize = 410;
+
 impl TaskManager {
+    fn trace_syscall_info(&self, syscall_id: usize) {
+        let mut inner = self.inner.exclusive_access();
+        let current = inner.current_task;
+        let idx = match syscall_id {
+            SYSCALL_WRITE => 0,
+            SYSCALL_EXIT => 1,
+            SYSCALL_TS => 2,
+            SYSCALL_YIELD => 3,
+            //SYSCALL_TASK_INFO => sys_task_info(args[0], args[1] as *mut TaskInfo),
+            _ => panic!("Unsupported syscall_id: {}", syscall_id),
+        };
+        inner.tasks[current].task_info.syscall[idx].times += 1;
+        inner.tasks[current].task_info.syscall[idx].id = syscall_id;
+    }
     fn mark_current_suspended(&self) {
         let mut inner = self.inner.exclusive_access();
         let current = inner.current_task;
@@ -69,6 +89,11 @@ impl TaskManager {
         let mut inner = self.inner.exclusive_access();
         let current = inner.current_task;
         trace!("task {} exited", current);
+        trace!(
+            "task {} syscall trace {:?}",
+            current,
+            inner.tasks[current].task_info
+        );
         inner.tasks[current].task_info.status = TaskStatus::Exited;
     }
 
@@ -145,4 +170,8 @@ pub fn exit_current_and_run_next() {
 
 pub fn run_first_task() -> ! {
     TASK_MANAGER.run_first_task()
+}
+
+pub fn trace_syscall_info(syscall_id: usize) {
+    TASK_MANAGER.trace_syscall_info(syscall_id);
 }
