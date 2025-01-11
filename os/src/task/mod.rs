@@ -11,7 +11,7 @@ use crate::{
     loader::{get_num_app, init_app_ctx},
     sync::UPSafeCell,
 };
-use log::info;
+use log::{info, trace};
 mod switch;
 
 // 该属性可以避免clippy的warning
@@ -62,11 +62,13 @@ impl TaskManager {
     fn mark_current_suspended(&self) {
         let mut inner = self.inner.exclusive_access();
         let current = inner.current_task;
+        trace!("task {} suspended", current);
         inner.tasks[current].task_info.status = TaskStatus::Ready;
     }
     fn mark_current_exited(&self) {
         let mut inner = self.inner.exclusive_access();
         let current = inner.current_task;
+        trace!("task {} exited", current);
         inner.tasks[current].task_info.status = TaskStatus::Exited;
     }
 
@@ -82,6 +84,7 @@ impl TaskManager {
         if let Some(next) = self.find_next_task() {
             let mut inner = self.inner.exclusive_access();
             let current = inner.current_task;
+            trace!("task {} running", current);
             inner.tasks[next].task_info.status = TaskStatus::Running;
             inner.current_task = next;
             let current_task_ctx_ptr = &mut inner.tasks[current].task_ctx as *mut TaskContext;
@@ -97,6 +100,8 @@ impl TaskManager {
         } else {
             //panic!("[kernel] all apps completed!");
             info!("[kernel] all apps completed!");
+            //use crate::board::QEMUExit;
+            //crate::board::QEMU_EXIT_HANDLE.exit_success();
             shutdown(true);
         }
     }
