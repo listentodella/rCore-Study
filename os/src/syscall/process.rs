@@ -35,3 +35,7 @@ pub struct TimeVal {
     pub sec: usize,
     pub usec: usize,
 }
+
+// pub fn sys_task_info(id: usize, ti: *mut TaskInfo) -> isize {
+//     0
+// }
