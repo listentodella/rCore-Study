@@ -1,6 +1,6 @@
 #![no_std]
 #![no_main]
-
+#![feature(variant_count)]
 #[macro_use]
 mod console;
 

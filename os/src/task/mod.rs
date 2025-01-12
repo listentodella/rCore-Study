@@ -1,6 +1,5 @@
 mod context;
-
-use crate::{config::MAX_APP_NUM, sbi::shutdown, timer::get_time_us};
+use crate::{config::MAX_APP_NUM, sbi::shutdown, syscall::SyscallID, timer::get_time_us};
 use context::TaskContext;
 use core::panic;
 use lazy_static::lazy_static;
@@ -70,23 +69,19 @@ lazy_static! {
     };
 }
 
-const SYSCALL_WRITE: usize = 64;
-const SYSCALL_EXIT: usize = 93;
-const SYSCALL_TS: usize = 169;
-const SYSCALL_YIELD: usize = 124;
-//const SYSCALL_TASK_INFO: usize = 410;
-
 impl TaskManager {
     fn trace_syscall_info(&self, syscall_id: usize) {
         let mut inner = self.inner.exclusive_access();
         let current = inner.current_task;
+        let syscall_id: SyscallID = syscall_id.into();
+
         let idx = match syscall_id {
-            SYSCALL_WRITE => 0,
-            SYSCALL_EXIT => 1,
-            SYSCALL_TS => 2,
-            SYSCALL_YIELD => 3,
+            SyscallID::Write => 0,
+            SyscallID::Exit => 1,
+            SyscallID::Yield => 2,
+            SyscallID::Ts => 3,
             //SYSCALL_TASK_INFO => sys_task_info(args[0], args[1] as *mut TaskInfo),
-            _ => panic!("Unsupported syscall_id: {}", syscall_id),
+            _ => 5,
         };
         inner.tasks[current].task_info.syscall[idx].times += 1;
         inner.tasks[current].task_info.syscall[idx].id = syscall_id;
@@ -104,12 +99,7 @@ impl TaskManager {
         let current = inner.current_task;
         // 当被标记为exit时, 意味着该app不再占用kernel time了
         inner.tasks[current].task_info.kernel_time += inner.update_duration();
-        trace!(
-            "task {} exited, user_time = {}, kernel_time = {}",
-            current,
-            inner.tasks[current].task_info.user_time,
-            inner.tasks[current].task_info.kernel_time
-        );
+
         trace!(
             "task {} syscall trace {:?}",
             current,

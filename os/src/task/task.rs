@@ -1,4 +1,5 @@
 use super::TaskContext;
+use crate::syscall::SyscallID;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum TaskStatus {
@@ -15,14 +16,13 @@ pub struct TaskControlBlock {
     pub task_info: TaskInfo,
 }
 
-const MAX_SYSCALL_NUM: usize = 5;
 #[derive(Copy, Clone, Debug)]
 pub struct TaskInfo {
     // task id
-    pub id: usize,
+    //pub id: usize,
     pub status: TaskStatus,
-    pub syscall: [SyscallInfo; MAX_SYSCALL_NUM],
-    pub time: usize,
+    pub syscall: [SyscallInfo; core::mem::variant_count::<SyscallID>()],
+    //pub time: usize,
     pub user_time: usize,
     pub kernel_time: usize,
 }
@@ -30,7 +30,7 @@ pub struct TaskInfo {
 #[derive(Copy, Clone, Debug)]
 pub struct SyscallInfo {
     // syscall id
-    pub id: usize,
+    pub id: SyscallID,
     // 这里是统计系统调用触发的次数, 而不是运行时间
     pub times: usize,
 }
@@ -38,10 +38,13 @@ pub struct SyscallInfo {
 impl TaskInfo {
     pub fn init() -> Self {
         Self {
-            id: 0,
+            //id: 0,
             status: TaskStatus::Uninit,
-            syscall: [SyscallInfo { id: 0, times: 0 }; MAX_SYSCALL_NUM],
-            time: 0,
+            syscall: [SyscallInfo {
+                id: SyscallID::Invalid,
+                times: 0,
+            }; core::mem::variant_count::<SyscallID>()],
+            //time: 0,
             user_time: 0,
             kernel_time: 0,
         }
