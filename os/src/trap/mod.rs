@@ -37,6 +37,8 @@ pub fn enable_timer_interrupt() {
 
 #[no_mangle]
 pub fn trap_handler(ctx: &mut TrapContext) -> &mut TrapContext {
+    // 从此开始属于kernel, 也是user time的暂停/停止点
+    crate::task::user_end_and_kernel_time_start();
     let scause = scause::read();
     let stval = stval::read();
     match scause.cause() {
@@ -68,5 +70,7 @@ pub fn trap_handler(ctx: &mut TrapContext) -> &mut TrapContext {
             );
         }
     }
+    // 从此开始属于user, 也是kernel time 的暂停/停止点
+    crate::task::kernel_end_and_user_time_start();
     ctx
 }

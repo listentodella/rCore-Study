@@ -1,6 +1,6 @@
 mod context;
 
-use crate::{config::MAX_APP_NUM, sbi::shutdown};
+use crate::{config::MAX_APP_NUM, sbi::shutdown, timer::get_time_us};
 use context::TaskContext;
 use core::panic;
 use lazy_static::lazy_static;
@@ -26,6 +26,17 @@ pub struct TaskManager {
 struct TaskManagerInner {
     tasks: [TaskControlBlock; MAX_APP_NUM],
     current_task: usize,
+    last_ts: usize,
+}
+
+impl TaskManagerInner {
+    // 每次会返回当前到上一次暂停的时间间隔
+    // 然后刷新为当前时间
+    fn update_duration(&mut self) -> usize {
+        let tmp_ts = self.last_ts;
+        self.last_ts = get_time_us();
+        self.last_ts - tmp_ts
+    }
 }
 
 lazy_static! {
@@ -52,6 +63,7 @@ lazy_static! {
                 UPSafeCell::new(TaskManagerInner {
                     tasks,
                     current_task: 0,
+                    last_ts:0
                 })
             },
         }
@@ -82,13 +94,22 @@ impl TaskManager {
     fn mark_current_suspended(&self) {
         let mut inner = self.inner.exclusive_access();
         let current = inner.current_task;
+        // 当被标记为suspend,即Ready时, 意味着该app不再占用kernel time了
+        inner.tasks[current].task_info.kernel_time += inner.update_duration();
         trace!("task {} suspended", current);
         inner.tasks[current].task_info.status = TaskStatus::Ready;
     }
     fn mark_current_exited(&self) {
         let mut inner = self.inner.exclusive_access();
         let current = inner.current_task;
-        trace!("task {} exited", current);
+        // 当被标记为exit时, 意味着该app不再占用kernel time了
+        inner.tasks[current].task_info.kernel_time += inner.update_duration();
+        trace!(
+            "task {} exited, user_time = {}, kernel_time = {}",
+            current,
+            inner.tasks[current].task_info.user_time,
+            inner.tasks[current].task_info.kernel_time
+        );
         trace!(
             "task {} syscall trace {:?}",
             current,
@@ -136,6 +157,8 @@ impl TaskManager {
         let task0 = &mut inner.tasks[0];
         task0.task_info.status = TaskStatus::Running;
         let next_task_ctx_ptr = &task0.task_ctx as *const TaskContext;
+        // 开始记录时间
+        inner.update_duration();
         drop(inner);
         let mut _unused = TaskContext::zero_init();
         unsafe {
@@ -143,6 +166,18 @@ impl TaskManager {
         }
 
         panic!("unreachable in run_first_task!");
+    }
+
+    fn kernel_end_and_user_time_start(&self) {
+        let mut inner = self.inner.exclusive_access();
+        let current = inner.current_task;
+        inner.tasks[current].task_info.kernel_time += inner.update_duration();
+    }
+
+    fn user_end_and_kernel_time_start(&self) {
+        let mut inner = self.inner.exclusive_access();
+        let current = inner.current_task;
+        inner.tasks[current].task_info.user_time += inner.update_duration();
     }
 }
 
@@ -174,4 +209,24 @@ pub fn run_first_task() -> ! {
 
 pub fn trace_syscall_info(syscall_id: usize) {
     TASK_MANAGER.trace_syscall_info(syscall_id);
+}
+
+/*
+ * 时间统计规则
+ * 1. 当 first_task 执行后,第一个app肯定是运行在user, 记为 t0
+ * 2. 之后, app与kernel切换的时机,一个是异常,一个是系统调用
+ *   2.1 当 switch 执行时, cpu/app 便从kernel转为user
+ *   2.2 当异常或系统调用触发时,cpu/app 便从user转为kernel
+ * 因此, 当第一个异常或系统调用触发时, 运行到 trap_handler 时, 可以第一时间记录为 t1
+ * t1 - t0 即为第一个app运行 user 的持续时间
+ * 之后切换到下一个app时, 即t2, 仍属于第一个app的 kernel 占用时间
+ * apps的kernel+user time 便如此反复
+ */
+
+pub fn kernel_end_and_user_time_start() {
+    TASK_MANAGER.kernel_end_and_user_time_start();
+}
+
+pub fn user_end_and_kernel_time_start() {
+    TASK_MANAGER.user_end_and_kernel_time_start();
 }
