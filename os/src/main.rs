@@ -22,6 +22,7 @@ pub mod trap;
 
 use core::arch::global_asm;
 use log::*;
+use riscv::register::sstatus;
 
 // include_str! 宏, 可以将指令路径下的文件转化为字符串
 // 再通过global_asm!宏嵌入到代码中
@@ -76,6 +77,22 @@ pub fn rust_main() -> ! {
     loader::load_apps();
     trap::enable_timer_interrupt();
     timer::set_next_trigger();
+
+    unsafe {
+        // 打开内核态中断
+        sstatus::set_sie();
+    }
+    loop {
+        if trap::check_kernel_interrupt() {
+            info!("kernel interrupt returned");
+            break;
+        }
+    }
+    unsafe {
+        // 关闭内核态中断
+        sstatus::clear_sie();
+    }
+
     task::run_first_task();
 
     // 如果以panic等非正常途径的方式进入发散

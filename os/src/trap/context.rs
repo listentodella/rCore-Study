@@ -3,6 +3,7 @@ use riscv::register::sstatus::{self, Sstatus, SPP};
 //Trap上下文（即数据结构 TrapContext ），
 //类似函数调用上下文，即在 Trap 发生时需要保存的物理资源内容
 #[repr(C)]
+#[derive(Debug)]
 pub struct TrapContext {
     // 通用寄存器 x0 ~ x31
     // 不过x0其实硬编码为0,不可能有变化

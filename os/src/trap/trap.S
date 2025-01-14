@@ -17,11 +17,18 @@
 // riscv 特权级规范, 4字节对齐
 .align 2
 __alltraps:
+    csrr tp, sstatus
+    andi tp, tp, 0x100
+    beqz tp, __user_trap_start
+    j __real_trap_entry
+
+__user_trap_start:
     # csrrw rd, csr, rs1
     # 控制状态寄存器读后写, 先记录csr的值t, 然后rs1存到csr, t存入rd
     # Xscratch 在异常中,提供一个字的临时存储,
     # 甚至可以当成一个普通的寄存器,如何使用完全取决于软件,硬件并不主动对它做什么
     csrrw sp, sscratch, sp #保存 sp;设置 sp 为临时内存空间的地址
+__real_trap_entry:
     # now sp->kernel stack, sscratch->user stack
     # allocate a TrapContext on kernel stack
     # 准备在内核栈上保存trap上下文,预分配34*8字节
@@ -63,6 +70,11 @@ __restore:
     csrw sstatus, t0
     csrw sepc, t1
     csrw sscratch, t2
+    # get SPP
+    andi t0, t0, 0x100
+    bnez t0, __kernel_trap_end
+
+__user_trap_end:
     # restore general-purpuse registers except sp/tp
     ld x1, 1*8(sp)
     ld x3, 3*8(sp)
@@ -75,6 +87,19 @@ __restore:
     addi sp, sp, 34*8
     # now sp->kernel stack, sscratch->user stack
     csrrw sp, sscratch, sp # 恢复 sp;设置 mscratch 为临时内存空间的地址
+    sret
+
+__kernel_trap_end:
+    #restore general-purpose registers except sp/tp
+    ld x1, 1*8(sp)
+    ld x3, 3*8(sp)
+    .set n, 5
+    .rept 27
+        LOAD_GP %n
+        .set n, n+1
+    .endr
+    # release TrapContext on kernel stack
+    addi sp, sp, 34*8
     sret
 
 
