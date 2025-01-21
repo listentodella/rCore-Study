@@ -1,6 +1,7 @@
 #![no_std]
 #![no_main]
 #![feature(variant_count)]
+#![feature(alloc_error_handler)]
 #[macro_use]
 mod console;
 
@@ -23,6 +24,9 @@ pub mod trap;
 use core::arch::global_asm;
 use log::*;
 use riscv::register::sstatus;
+
+mod mm;
+extern crate alloc;
 
 // include_str! 宏, 可以将指令路径下的文件转化为字符串
 // 再通过global_asm!宏嵌入到代码中
@@ -70,6 +74,8 @@ pub fn rust_main() -> ! {
         boot_stack_top as usize, boot_stack_lower_bound as usize
     );
     error!("[kernel] .bss [{:#x}, {:#x})", sbss as usize, ebss as usize);
+
+    mm::init();
 
     trap::init();
     //batch::init();
