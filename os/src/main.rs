@@ -4,6 +4,7 @@
 #![feature(alloc_error_handler)]
 #[macro_use]
 mod console;
+extern crate bitflags;
 
 #[path = "board/qemu.rs"]
 mod board;
