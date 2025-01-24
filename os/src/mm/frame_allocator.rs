@@ -80,3 +80,37 @@ pub fn init_frame_allocator() {
         PhysAddr::from(MEMORY_END).floor(),
     );
 }
+
+pub struct FrameTracker {
+    pub ppn: PhysPageNum,
+}
+impl FrameTracker {
+    pub fn new(ppn: PhysPageNum) -> Self {
+        //page cleaning
+        let bytes_array = ppn.get_bytes_array();
+        bytes_array.iter_mut().for_each(|v| *v = 0);
+        Self { ppn }
+    }
+}
+
+impl Drop for FrameTracker {
+    fn drop(&mut self) {
+        frame_dealloc(self.ppn);
+    }
+}
+
+// 这里用FrameTracker进一步封装, 是借用了RAII的思想
+// 将一个物理页帧的生命周期绑定到一个FrameTracker变量上
+// 当它被创建的时候,它一定是被初始化好的,可以安心使用
+// 当它的生命周期结束被回收时, 通过实现Drop让编译器自动处理
+pub fn frame_alloc() -> Option<FrameTracker> {
+    FRAME_ALLOCATOR
+        .exclusive_access()
+        .alloc()
+        .map(FrameTracker::new)
+    //.map(|ppn| FrameTracker::new(ppn))
+}
+
+fn frame_dealloc(ppn: PhysPageNum) {
+    FRAME_ALLOCATOR.exclusive_access().dealloc(ppn);
+}
