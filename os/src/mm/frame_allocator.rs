@@ -3,6 +3,7 @@ use crate::{config::MEMORY_END, sync::UPSafeCell};
 use alloc::vec::Vec;
 use core::panic;
 use lazy_static::lazy_static;
+use log::*;
 
 // 描述一个物理页帧管理器需要提供哪些功能
 trait FrameAllocator {
@@ -42,10 +43,13 @@ impl FrameAllocator for StackFrameAllocator {
 
     fn alloc(&mut self) -> Option<PhysPageNum> {
         if let Some(ppn) = self.recycled.pop() {
+            trace!("page {} recycled", ppn);
             Some(ppn.into())
         } else if self.current == self.end {
+            error!("overflow!!!");
             None
         } else {
+            trace!("alloc new page");
             self.current += 1;
             Some((self.current - 1).into())
         }
@@ -81,6 +85,7 @@ pub fn init_frame_allocator() {
     );
 }
 
+#[derive(Debug)]
 pub struct FrameTracker {
     pub ppn: PhysPageNum,
 }
@@ -88,6 +93,7 @@ impl FrameTracker {
     pub fn new(ppn: PhysPageNum) -> Self {
         //page cleaning
         let bytes_array = ppn.get_bytes_array();
+        println!("{:#?}", ppn);
         bytes_array.iter_mut().for_each(|v| *v = 0);
         Self { ppn }
     }
@@ -107,10 +113,32 @@ pub fn frame_alloc() -> Option<FrameTracker> {
     FRAME_ALLOCATOR
         .exclusive_access()
         .alloc()
-        .map(FrameTracker::new)
-    //.map(|ppn| FrameTracker::new(ppn))
+        //.map(FrameTracker::new)
+        .map(|ppn| FrameTracker::new(ppn))
 }
 
 fn frame_dealloc(ppn: PhysPageNum) {
     FRAME_ALLOCATOR.exclusive_access().dealloc(ppn);
+}
+
+#[allow(unused)]
+pub fn frame_allocator_test() {
+    init_frame_allocator();
+    info!("new pages test :)");
+    let mut v = Vec::<FrameTracker>::new();
+    for i in 0..5 {
+        let frame = frame_alloc().unwrap();
+        println!("{:?}", frame);
+        v.push(frame);
+    }
+    v.clear();
+
+    info!("reuse pages test :)");
+    for i in 0..5 {
+        let frame = frame_alloc().unwrap();
+        println!("{:?}", frame);
+        v.push(frame);
+    }
+    drop(v);
+    println!("frame_allocator_test passed!");
 }

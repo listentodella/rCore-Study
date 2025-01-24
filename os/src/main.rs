@@ -77,6 +77,7 @@ pub fn rust_main() -> ! {
     error!("[kernel] .bss [{:#x}, {:#x})", sbss as usize, ebss as usize);
 
     mm::init();
+    mm::frame_allocator::frame_allocator_test();
 
     trap::init();
     //batch::init();
