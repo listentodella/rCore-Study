@@ -1,8 +1,8 @@
-use core::panic;
-
+use super::address::{PhysAddr, PhysPageNum};
+use crate::{config::MEMORY_END, sync::UPSafeCell};
 use alloc::vec::Vec;
-
-use super::address::PhysPageNum;
+use core::panic;
+use lazy_static::lazy_static;
 
 // 描述一个物理页帧管理器需要提供哪些功能
 trait FrameAllocator {
@@ -62,4 +62,21 @@ impl FrameAllocator for StackFrameAllocator {
         //recycle
         self.recycled.push(ppn);
     }
+}
+
+// 使用UPSafeCell封装,确保安全访问
+type FrameAllocatorImpl = StackFrameAllocator;
+lazy_static! {
+    pub static ref FRAME_ALLOCATOR: UPSafeCell<FrameAllocatorImpl> =
+        unsafe { UPSafeCell::new(FrameAllocatorImpl::new()) };
+}
+
+pub fn init_frame_allocator() {
+    extern "C" {
+        fn ekernel();
+    }
+    FRAME_ALLOCATOR.exclusive_access().init(
+        PhysAddr::from(ekernel as usize).ceil(),
+        PhysAddr::from(MEMORY_END).floor(),
+    );
 }
