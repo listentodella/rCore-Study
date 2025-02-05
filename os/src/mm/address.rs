@@ -113,3 +113,16 @@ impl PhysPageNum {
         unsafe { (pa.0 as *mut T).as_mut().unwrap() }
     }
 }
+
+impl VirtPageNum {
+    // 取出虚拟页号的三级页索引, 并按照从高到低的顺序返回
+    pub fn indexes(&self) -> [usize; 3] {
+        let mut vpn = self.0;
+        let mut idx = [0usize; 3];
+        for i in (0..3).rev() {
+            idx[i] = vpn & 511;
+            vpn >>= 9;
+        }
+        idx
+    }
+}

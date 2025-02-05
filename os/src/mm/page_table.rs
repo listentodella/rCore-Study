@@ -1,4 +1,9 @@
-use super::address::PhysPageNum;
+use super::{
+    address::{PhysPageNum, VirtPageNum},
+    frame_allocator::{self, frame_alloc, FrameTracker},
+};
+use alloc::vec;
+use alloc::vec::Vec;
 use bitflags::*;
 
 /*
@@ -61,5 +66,79 @@ impl PageTableEntry {
 
     pub fn is_valid(&self) -> bool {
         (self.flags() & PTEFlags::V) != PTEFlags::empty()
+    }
+}
+
+pub struct PageTable {
+    root_ppn: PhysPageNum,
+    frames: Vec<FrameTracker>,
+}
+
+//每个应用的地址空间都对应一个不同的多级页表，这也就意味这不同页表的起始地址（即页表根节点的地址）是不一样的。
+//因此 PageTable 要保存它根节点的物理页号 root_ppn 作为页表唯一的区分标志。
+impl PageTable {
+    pub fn new() -> Self {
+        let frame = frame_allocator::frame_alloc().unwrap();
+        Self {
+            root_ppn: frame.ppn,
+            frames: vec![frame],
+        }
+    }
+
+    // 在多级页表找到一个虚拟页号对应的页表项的可变引用
+    // 如果在遍历的过程中发现有节点尚未创建则会新建一个节点
+    fn find_pte_create(&mut self, vpn: VirtPageNum) -> Option<&mut PageTableEntry> {
+        let idxs = vpn.indexes();
+        let mut ppn = self.root_ppn;
+        let mut ret: Option<&mut PageTableEntry> = None;
+        //for (i, item) in idxs.iter_mut().enumerate() {
+        //let pte = &mut ppn.get_pte_array()[*item];
+        for i in 0..3 {
+            let pte = &mut ppn.get_pte_array()[idxs[i]];
+            if i == 2 {
+                ret = Some(pte);
+                break;
+            }
+
+            if !pte.is_valid() {
+                let frame = frame_alloc().unwrap();
+                *pte = PageTableEntry::new(frame.ppn, PTEFlags::V);
+                self.frames.push(frame);
+            }
+            ppn = pte.ppn();
+        }
+        ret
+    }
+
+    //当找不到合法叶子节点的时候不会新建叶子节点而是直接返回 None 即查找失败
+    fn find_pte(&self, vpn: VirtPageNum) -> Option<&mut PageTableEntry> {
+        let idxs = vpn.indexes();
+        let mut ppn = self.root_ppn;
+        let mut ret: Option<&mut PageTableEntry> = None;
+        for i in 0..3 {
+            let pte = &mut ppn.get_pte_array()[idxs[i]];
+            if i == 2 {
+                ret = Some(pte);
+                break;
+            }
+            if !pte.is_valid() {
+                return None;
+            }
+            ppn = pte.ppn();
+        }
+        ret
+    }
+
+    // 在多级页表中插入一个键值对:建立va pa的映射关系
+    pub fn map(&mut self, vpn: VirtPageNum, ppn: PhysPageNum, flags: PTEFlags) {
+        let pte = self.find_pte_create(vpn).unwrap();
+        assert!(!pte.is_valid(), "vpn {:?} is mapped before mapping", vpn);
+        *pte = PageTableEntry::new(ppn, flags | PTEFlags::V);
+    }
+    // 来删除一个键值对:拆除va pa的映射关系
+    pub fn unmap(&mut self, vpn: VirtPageNum) {
+        let pte = self.find_pte(vpn).unwrap();
+        assert!(!pte.is_valid(), "vpn {:?} is invalid before unmapping", vpn);
+        *pte = PageTableEntry::empty();
     }
 }
