@@ -141,4 +141,18 @@ impl PageTable {
         assert!(!pte.is_valid(), "vpn {:?} is invalid before unmapping", vpn);
         *pte = PageTableEntry::empty();
     }
+
+    // 可以临时创建一个专用来手动查找页表的PageTable
+    // 它仅有一个从传入的satp token 中得到的多级页表根节点的物理页号
+    // frames 字段为空, 即实际不控制任何资源
+    pub fn from_token(satp: usize) -> Self {
+        Self {
+            root_ppn: PhysPageNum::from(satp & ((1usize << 44) - 1)),
+            frames: Vec::new(),
+        }
+    }
+
+    pub fn translate(&self, vpn: VirtPageNum) -> Option<PageTableEntry> {
+        self.find_pte(vpn).map(|pte| pte.clone())
+    }
 }
