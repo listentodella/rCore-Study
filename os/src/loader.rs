@@ -84,6 +84,7 @@ fn get_base_i(app_id: usize) -> usize {
 }
 
 /// Get the total number of applications.
+//获取链接到内核内的应用的数目
 pub fn get_num_app() -> usize {
     extern "C" {
         fn _num_app();
@@ -96,4 +97,21 @@ pub fn init_app_ctx(app_id: usize) -> usize {
         get_base_i(app_id),
         USER_STACK[app_id].get_sp(),
     ))
+}
+
+// 根据app id取出对应app的elf格式可执行文件的数据
+pub fn get_app_data(app_id: usize) -> &'static [u8] {
+    extern "C" {
+        fn _num_app();
+    }
+    let num_app_ptr = _num_app as usize as *const usize;
+    let num_app = get_num_app();
+    let app_start = unsafe { core::slice::from_raw_parts(num_app_ptr.add(1), num_app + 1) };
+    assert!(app_id < num_app);
+    unsafe {
+        core::slice::from_raw_parts(
+            app_start[app_id] as *const u8,
+            app_start[app_id + 1] - app_start[app_id],
+        )
+    }
 }
