@@ -16,3 +16,5 @@ pub const PAGE_SIZE: usize = 0x1000; //4096, 4K
 // 起始物理地址则设定为 0x8000_0000
 // 在这里我们硬编码**整块**物理内存的终止物理地址, 即8MB
 pub const MEMORY_END: usize = 0x8080_0000;
+
+pub const TRAMPOLINE: usize = usize::MAX - PAGE_SIZE + 1;

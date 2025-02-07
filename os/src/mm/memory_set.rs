@@ -3,14 +3,28 @@ use super::{
     frame_allocator::FrameTracker,
     page_table::{self, PageTable},
 };
-use crate::config::PAGE_SIZE;
-use crate::mm::address::PhysPageNum;
-use crate::mm::address::StepByOne;
+use crate::config::{MEMORY_END, PAGE_SIZE, TRAMPOLINE};
+use crate::mm::address::{PhysAddr, PhysPageNum, StepByOne};
 use crate::mm::frame_allocator::frame_alloc;
 use crate::mm::page_table::PTEFlags;
 use alloc::collections::btree_map::BTreeMap;
 use alloc::vec::Vec;
 use bitflags::bitflags;
+use log::trace;
+
+extern "C" {
+    fn stext();
+    fn etext();
+    fn srodata();
+    fn erodata();
+    fn sdata();
+    fn edata();
+    fn sbss();
+    fn sbss_with_stack();
+    fn ebss();
+    fn ekernel();
+    fn strampoline();
+}
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum MapType {
@@ -174,6 +188,93 @@ impl MemorySet {
         );
     }
 
-    // pub fn new_kernel() -> Self {}
+    /// Mention that trampoline is not collected by areas.
+    fn map_trampoline(&mut self) {
+        self.page_table.map(
+            VirtAddr::from(TRAMPOLINE).into(),
+            PhysAddr::from(strampoline as usize).into(),
+            PTEFlags::R | PTEFlags::X,
+        );
+    }
+    // without kernel stacks
+    pub fn new_kernel() -> Self {
+        let mut memory_set = Self::new_bare();
+        // map trampoline
+        memory_set.map_trampoline();
+        // map kenrel stacks
+        trace!(
+            "[kernel] .text [{:#x}, {:#x})",
+            stext as usize,
+            etext as usize
+        );
+        trace!(
+            "[kernel] .rodata [{:#x}, {:#x})",
+            srodata as usize,
+            erodata as usize
+        );
+        trace!(
+            "[kernel] .data [{:#x}, {:#x})",
+            sdata as usize,
+            edata as usize
+        );
+        trace!(
+            "[kernel] .bss [{:#x}, {:#x})",
+            //sbss as usize,
+            sbss_with_stack as usize,
+            ebss as usize
+        );
+        trace!("[kernel] mapping .text section");
+        memory_set.push(
+            MapArea::new(
+                (stext as usize).into(),
+                (etext as usize).into(),
+                MapType::Identical,
+                MapPermission::R | MapPermission::X,
+            ),
+            None,
+        );
+        trace!("[kernel] mapping .rodata section");
+        memory_set.push(
+            MapArea::new(
+                (srodata as usize).into(),
+                (erodata as usize).into(),
+                MapType::Identical,
+                MapPermission::R,
+            ),
+            None,
+        );
+        trace!("[kernel] mapping .data section");
+        memory_set.push(
+            MapArea::new(
+                (sdata as usize).into(),
+                (edata as usize).into(),
+                MapType::Identical,
+                MapPermission::R | MapPermission::W,
+            ),
+            None,
+        );
+        trace!("[kernel] mapping .bss section");
+        memory_set.push(
+            MapArea::new(
+                //(sbss as usize).into(),
+                (sbss_with_stack as usize).into(),
+                (ebss as usize).into(),
+                MapType::Identical,
+                MapPermission::R | MapPermission::W,
+            ),
+            None,
+        );
+        trace!("[kernel] mapping physical memory");
+        memory_set.push(
+            MapArea::new(
+                (ekernel as usize).into(),
+                MEMORY_END.into(),
+                MapType::Identical,
+                MapPermission::R | MapPermission::W,
+            ),
+            None,
+        );
+        memory_set
+    }
     // pub fn from_elf(elf_data: &[u8]) -> (Self, usize, usize) {}
 }

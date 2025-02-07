@@ -31,16 +31,42 @@ page offset: [11:0]
 
 //SV39 支持的物理地址位宽为 56 位，因此在生成 PhysAddr 的时候我们仅使用 usize 较低的 56 位
 const PA_WIDTH_SV39: usize = 56;
+const VA_WIDTH_SV39: usize = 39;
 
 // 56 - 12 = 44;
 // 即44位用于标识PhysPageNum,即物理页号
 // 后12位用于标识PageSize, 目前即2^12=4K
 const PPN_WIDTH_SV39: usize = PA_WIDTH_SV39 - PAGE_SIZE_BITS;
+const VPN_WIDTH_SV39: usize = VA_WIDTH_SV39 - PAGE_SIZE_BITS;
 
 impl From<usize> for PhysAddr {
     fn from(value: usize) -> Self {
         //SV39 支持的物理地址位宽为 56 位，因此在生成 PhysAddr 的时候我们仅使用 usize 较低的 56 位
         Self(value & ((1 << PA_WIDTH_SV39) - 1))
+    }
+}
+
+impl From<usize> for VirtAddr {
+    fn from(v: usize) -> Self {
+        Self(v & ((1 << VA_WIDTH_SV39) - 1))
+    }
+}
+
+impl From<usize> for VirtPageNum {
+    fn from(v: usize) -> Self {
+        Self(v & ((1 << VPN_WIDTH_SV39) - 1))
+    }
+}
+
+impl From<VirtAddr> for VirtPageNum {
+    fn from(v: VirtAddr) -> Self {
+        assert_eq!(v.page_offset(), 0);
+        v.floor()
+    }
+}
+impl From<VirtPageNum> for VirtAddr {
+    fn from(v: VirtPageNum) -> Self {
+        Self(v.0 << PAGE_SIZE_BITS)
     }
 }
 
