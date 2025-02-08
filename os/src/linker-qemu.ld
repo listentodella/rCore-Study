@@ -17,9 +17,14 @@ SECTIONS
 
 	stext = .;
 	.text : {
-		*(.text.entry)
-		*(.text.entry.*)
-	}
+        *(.text.entry)
+        . = ALIGN(4K);
+        strampoline = .;
+        *(.text.trampoline);
+        . = ALIGN(4K);
+        *(.text .text.*)
+    }
+
 
 	. = ALIGN(4K);
 	etext = .;
@@ -39,6 +44,7 @@ SECTIONS
 
 	. = ALIGN(4K);
 	edata = .;
+    sbss_with_stack = .;
 	.bss : {
 		*(.bss.stack)
 		sbss = .;
@@ -50,7 +56,6 @@ SECTIONS
 	ebss = .;
 	ekernel = .;
 
-	/DISCARD/ : {
-		*(.eh_frame)
+	/DISCARD/ : { *(.eh_frame)
 	}
 }

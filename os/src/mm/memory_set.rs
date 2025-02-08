@@ -1,16 +1,22 @@
 use super::{
     address::{VPNRange, VirtAddr, VirtPageNum},
     frame_allocator::FrameTracker,
-    page_table::{self, PageTable},
+    page_table::PageTable,
 };
-use crate::config::{MEMORY_END, PAGE_SIZE, TRAMPOLINE, TRAP_CONTEXT, USER_STACK_SIZE};
 use crate::mm::address::{PhysAddr, PhysPageNum, StepByOne};
 use crate::mm::frame_allocator::frame_alloc;
 use crate::mm::page_table::PTEFlags;
-use alloc::collections::btree_map::BTreeMap;
+use crate::{
+    config::{MEMORY_END, PAGE_SIZE, TRAMPOLINE, TRAP_CONTEXT, USER_STACK_SIZE},
+    sync::UPSafeCell,
+};
 use alloc::vec::Vec;
+use alloc::{collections::btree_map::BTreeMap, sync::Arc};
 use bitflags::bitflags;
+use core::arch::asm;
+use lazy_static::lazy_static;
 use log::trace;
+use riscv::register::satp;
 
 extern "C" {
     fn stext();
@@ -346,4 +352,26 @@ impl MemorySet {
             elf.header.pt2.entry_point() as usize,
         )
     }
+
+    pub fn activate(&self) {
+        let satp = self.page_table.token();
+        unsafe {
+            // 写satp的指令及其下一条指令,都在内核内存布局的代码段中
+            // 在切换之后是一个恒等映射
+            // 切换之前则是物理地址直接取指,也可以看作是恒等映射
+            // 即使切换了地址空间,指令依然能够被连续执行
+            satp::write(satp);
+            // 一旦切换地址空间后,TLB里的旧映射关系就失效了
+            // 通过该指令将TLB清空
+            // 本质上该指令是一个barrier,
+            //所有发生在它后面的地址转换都能够看到所有排在它前面的写入操作
+            asm!("sfence.vma");
+        }
+    }
+}
+
+// 创建内核地址空间的全局实例
+lazy_static! {
+    pub static ref KERNEL_SPACE: Arc<UPSafeCell<MemorySet>> =
+        Arc::new(unsafe { UPSafeCell::new(MemorySet::new_kernel()) });
 }
