@@ -16,4 +16,6 @@ pub fn init() {
     // 然后通过exclusive_access获取一个&mut MemorySet
     // 然后通过activate将satp CSR进行设置,激活SV39分页模式
     KERNEL_SPACE.exclusive_access().activate();
+
+    memory_set::remap_test();
 }
