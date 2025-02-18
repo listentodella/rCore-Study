@@ -4,8 +4,10 @@
 use core::arch::asm;
 use core::arch::global_asm;
 
+mod config;
 mod console;
 mod lang_item;
+mod mm;
 mod syscall;
 mod timer;
 mod trap;

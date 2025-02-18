@@ -27,5 +27,5 @@ pub fn handle_timer_irq() {
     //init();
     let val = JIFFIES.load(Ordering::Relaxed);
     JIFFIES.store(val.wrapping_add(1), Ordering::Relaxed);
-    println!("Core0 Timer jiffies = {:?}", JIFFIES);
+    //println!("Core0 Timer jiffies = {:?}", JIFFIES);
 }
